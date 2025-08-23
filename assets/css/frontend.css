@@ -1,0 +1,16 @@
+.mm-wrap { border: 1px solid #e5e7eb; padding: 1rem; border-radius: .5rem; background: #fff; }
+.mm-row { display:flex; gap: .5rem; align-items:center; margin-bottom: .5rem; }
+.mm-row > label { width: 140px; }
+.mm-fieldset { border:1px dashed #e5e7eb; padding:.5rem .75rem; border-radius:.5rem; margin-bottom:.75rem; }
+.mm-radio { margin-right: 1rem; }
+.mm-details { margin:.5rem 0; }
+.mm-grid-3 { display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:.75rem; }
+.mm-btn { background:#111827; color:#fff; border:0; padding:.5rem .75rem; border-radius:.375rem; cursor:pointer; }
+.mm-btn:hover { opacity:.9; }
+.mm-loading { padding:.5rem; }
+.mm-results { margin-top: .75rem; }
+.mm-card { border:1px solid #e5e7eb; border-radius:.5rem; padding:.75rem; background:#fafafa; }
+.mm-card h3 { margin-top:0; }
+.mm-actions { display:flex; gap:.5rem; margin-top:.5rem; }
+.mm-help { color:#6b7280; font-size:.9em; }
+@media (max-width:640px){ .mm-grid-3 { grid-template-columns: 1fr; } .mm-row { flex-direction:column; align-items:flex-start; } .mm-row > label { width:auto; } }

@@ -1,35 +1,53 @@
 <?php
-/*
-Plugin Name: Margarita Measurements
-Description: Calculates measurements for making a margarita cocktail
-Version: 1.1
-*/
+/**
+ * Plugin Name: Margarita Measurements
+ * Plugin URI: https://example.com/margarita-measurements
+ * Description: Calculate perfect margarita ratios with presets, units, and ABV estimate. Shortcode: [margarita_measurements]. Also provides a Gutenberg block.
+ * Version: 2.1.0
+ * Author: Your Name
+ * Text Domain: margarita-measurements
+ * Requires at least: 5.8
+ * Requires PHP: 7.4
+ *
+ * @package MargaritaMeasurements
+ */
 
-function margarita_measurements_shortcode() {
-    $drinks = isset($_POST['drinks']) ? intval($_POST['drinks']) : 1;
-    $tequila = $drinks * 1.5;
-    $lime_juice = $drinks * 0.75;
-    $lemon_juice = $drinks * 0.25;
-    $cointreau = $drinks * 0.5;
-    $salt = 'A pinch';
-    $ice = 'As needed';
-
-    $output = '<form method="POST">';
-    $output .= '<label for="drinks">How many drinks would you like to make?</label>';
-    $output .= '<input type="number" name="drinks" value="' . $drinks . '" min="1" max="10">';
-    $output .= '<button type="submit">Calculate</button>';
-    $output .= '</form>';
-
-    $output .= '<ul>';
-    $output .= '<li>Tequila: ' . $tequila . ' shots</li>';
-    $output .= '<li>Lime juice: ' . $lime_juice . ' shots</li>';
-    $output .= '<li>Lemon juice: ' . $lemon_juice . ' shots</li>';
-    $output .= '<li>Cointreau: ' . $cointreau . ' shots</li>';
-    $output .= '<li>Salt: ' . $salt . '</li>';
-    $output .= '<li>Ice: ' . $ice . '</li>';
-    $output .= '</ul>';
-
-    return $output;
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
 }
-add_shortcode('margarita_measurements', 'margarita_measurements_shortcode');
-?>
+
+define( 'MM_VERSION', '2.1.0' );
+define( 'MM_PLUGIN_FILE', __FILE__ );
+define( 'MM_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
+define( 'MM_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
+
+spl_autoload_register( function( $class ) {
+    if ( strpos( $class, 'MM_' ) === 0 ) {
+        $file = MM_PLUGIN_DIR . 'includes/class-' . strtolower( str_replace( 'MM_', '', $class ) ) . '.php';
+        if ( file_exists( $file ) ) {
+            require_once $file;
+        }
+    }
+} );
+
+register_activation_hook( __FILE__, function() {
+    $defaults = array(
+        'unit'           => 'ml',
+        'default_preset' => 'classic',
+        'max_drinks'     => 25,
+        'show_abv'       => 1,
+    );
+    foreach ( $defaults as $k => $v ) {
+        if ( get_option( "mm_$k", null ) === null ) {
+            update_option( "mm_$k", $v );
+        }
+    }
+} );
+
+add_action( 'plugins_loaded', function() {
+    load_plugin_textdomain( 'margarita-measurements', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
+    MM_Plugin::instance();
+    MM_Settings::instance();
+    MM_REST::instance();
+    MM_Ajax::instance();
+} );
