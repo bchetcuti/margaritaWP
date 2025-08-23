@@ -1,0 +1,20 @@
+{
+  "apiVersion": 3,
+  "name": "margarita/measurements",
+  "title": "Margarita Measurements",
+  "category": "widgets",
+  "icon": "carrot",
+  "description": "Interactive margarita calculator.",
+  "keywords": [
+    "cocktail",
+    "margarita",
+    "drink",
+    "calculator"
+  ],
+  "editorScript": "file:./editor.js",
+  "editorStyle": "file:./editor.css",
+  "style": "file:./style.css",
+  "supports": {
+    "html": false
+  }
+}
