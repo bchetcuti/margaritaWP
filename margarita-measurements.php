@@ -1,10 +1,10 @@
 <?php
 /**
  * Plugin Name: Margarita Measurements
- * Plugin URI: https://example.com/margarita-measurements
+ * Plugin URI: #
  * Description: Calculate perfect margarita ratios with presets, units, and ABV estimate. Shortcode: [margarita_measurements]. Also provides a Gutenberg block.
- * Version: 2.1.0
- * Author: Your Name
+ * Version: 2.2.0
+ * Author: Bryan Chetcuti (https://github.com/bchetcuti/margaritaWP)
  * Text Domain: margarita-measurements
  * Requires at least: 5.8
  * Requires PHP: 7.4
