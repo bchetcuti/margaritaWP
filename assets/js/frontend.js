@@ -28,6 +28,26 @@
         return rows;
     }
 
+
+    function nutritionDetails(d) {
+        if (!d.nutrition) { return ''; }
+        var n = d.nutrition;
+        var html = '<details class="mm-details mm-nutrition">';
+        html += '<summary>Nutrition &amp; standard drinks</summary>';
+        html += '<div class="mm-nutrition-grid">';
+        html += '<div><span class="mm-metric-label">Estimated calories</span><strong>~' + esc(n.calories_per_drink) + ' kcal</strong></div>';
+        html += '<div><span class="mm-metric-label">Alcohol</span><strong>' + esc(n.alcohol_grams_per_drink) + 'g</strong></div>';
+        html += '<div><span class="mm-metric-label">Standard drinks</span><strong>' + esc(n.standard_drinks_per_drink) + ' ' + esc(n.region) + ' standard drinks</strong></div>';
+        html += '<div><span class="mm-metric-label">Region</span><strong>' + esc(n.region_label) + '</strong></div>';
+        if (typeof d.abv !== 'undefined' && !(d.flavour && d.flavour.no_alcohol)) {
+            html += '<div><span class="mm-metric-label">Estimated ABV</span><strong>' + esc(d.abv) + '%</strong></div>';
+        }
+        html += '</div>';
+        html += '<p class="mm-help">' + esc(n.help || 'Approximate values for recipe planning only.') + ' ' + esc(n.calorie_note || '') + '</p>';
+        html += '</details>';
+        return html;
+    }
+
     function copyText(d) {
         var lines = ['Margarita Recipe'];
         lines.push('Preset: ' + (d.preset_label || titleCase(d.preset)));
@@ -130,6 +150,7 @@
             if (d.salt_rim) {
                 html += '<p>🧂 <strong>Salt rim:</strong> ~' + esc(d.salt_rim.grams) + 'g (' + esc(d.salt_rim.tsps) + ' tsp) — ' + esc(d.salt_rim.wet_dry) + ' rim</p>';
             }
+            html += nutritionDetails(d);
             if (d.mode === 'party') {
                 html += '<h4>Shopping list</h4>';
                 ['spirits', 'mixers'].forEach(function(group){

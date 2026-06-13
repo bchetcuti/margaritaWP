@@ -21,7 +21,10 @@ class MM_Ajax {
             'guests'     => min( 500, max( 1, absint( wp_unslash( $_POST['guests'] ?? 10 ) ) ) ),
             'drinks_per_person' => min( 12, max( 0.1, (float) wp_unslash( $_POST['drinks_per_person'] ?? 2 ) ) ),
             'event_duration' => min( 24, max( 0.5, (float) wp_unslash( $_POST['event_duration'] ?? 2 ) ) ),
-            'standard_drink_region' => sanitize_key( wp_unslash( $_POST['standard_drink_region'] ?? get_option( 'mm_standard_drink_region', 'AU' ) ) ),
+            'standard_drink_region' => sanitize_key( wp_unslash( $_POST['standard_drink_region'] ?? $_POST['standard_region'] ?? get_option( 'mm_standard_drink_region', 'AU' ) ) ),
+            'standard_region' => sanitize_key( wp_unslash( $_POST['standard_region'] ?? $_POST['standard_drink_region'] ?? get_option( 'mm_standard_drink_region', 'AU' ) ) ),
+            'tequila_abv' => wp_unslash( $_POST['tequila_abv'] ?? 40 ),
+            'triple_sec_abv' => wp_unslash( $_POST['triple_sec_abv'] ?? 40 ),
         );
         $calc            = MM_Plugin::instance()->calc;
         $allowed_presets = array_keys( $calc->list_presets() );
@@ -29,6 +32,10 @@ class MM_Ajax {
         $args['preset']  = in_array( $args['preset'], $allowed_presets, true ) ? $args['preset'] : 'classic';
         $args['unit']    = in_array( $args['unit'], $allowed_units, true ) ? $args['unit'] : get_option( 'mm_unit', 'ml' );
         $args['flavour'] = $calc->normalise_flavour_key( $args['flavour'] );
+        $args['standard_region'] = $calc->normalise_standard_drink_region( $args['standard_region'] );
+        $args['standard_drink_region'] = $calc->normalise_standard_drink_region( $args['standard_drink_region'] );
+        $args['tequila_abv'] = $calc->sanitize_tequila_abv( $args['tequila_abv'] );
+        $args['triple_sec_abv'] = $calc->sanitize_triple_sec_abv( $args['triple_sec_abv'] );
         $mode            = in_array( $mode, array( 'drinks', 'pitcher', 'party' ), true ) ? $mode : 'drinks';
         if ( 'party' === $mode ) {
             $args['standard_drink_region'] = $calc->normalise_standard_drink_region( $args['standard_drink_region'] );
@@ -52,6 +59,9 @@ class MM_Ajax {
         $data['abv'] = round( $data['abv'], 1 );
         if ( empty( $_POST['show_abv'] ) || ! empty( $data['flavour']['no_alcohol'] ) ) {
             unset( $data['abv'] );
+        }
+        if ( empty( $_POST['show_nutrition'] ) ) {
+            unset( $data['nutrition'] );
         }
         wp_send_json_success( $data );
     }
