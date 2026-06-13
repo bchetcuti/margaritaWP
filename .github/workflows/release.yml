@@ -25,6 +25,9 @@ jobs:
             echo 'Plugin header OK' . PHP_EOL;
           "
 
+      - name: PHP syntax check
+        run: find . -name "*.php" -not -path "./dist/*" -not -path "./vendor/*" -print0 | xargs -0 -n1 php -l
+
       - name: Stage plugin files
         run: |
           mkdir -p dist/margarita-measurements

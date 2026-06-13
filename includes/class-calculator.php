@@ -1,4 +1,8 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 class MM_Calculator {
     protected $presets = array(
         'classic' => array(
