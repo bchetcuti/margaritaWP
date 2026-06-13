@@ -43,7 +43,7 @@ class MM_Plugin {
         $presets        = $this->calc->list_presets();
         $flavours       = $this->calc->list_flavours();
         $allowed_units  = array( 'ml', 'oz', 'shot', 'nip' );
-        $allowed_modes  = array( 'drinks', 'pitcher' );
+        $allowed_modes  = array( 'drinks', 'pitcher', 'party' );
 
         $atts = shortcode_atts(
             array(
@@ -102,11 +102,18 @@ class MM_Plugin {
                     <select id="<?php echo esc_attr( $instance ); ?>-mode" name="mode">
                         <option value="drinks" <?php selected( 'drinks', $mode ); ?>><?php esc_html_e( 'Per drink count', 'margarita-measurements' ); ?></option>
                         <option value="pitcher" <?php selected( 'pitcher', $mode ); ?>><?php esc_html_e( 'Pitcher (total ml)', 'margarita-measurements' ); ?></option>
+                        <option value="party" <?php selected( 'party', $mode ); ?>><?php esc_html_e( 'Party Planning', 'margarita-measurements' ); ?></option>
                     </select>
                 </div>
                 <div class="mm-row mm-pitcher-row"<?php echo 'pitcher' === $mode ? '' : ' style="display:none;"'; ?>>
                     <label for="<?php echo esc_attr( $instance ); ?>-pitcher"><?php esc_html_e( 'Pitcher size (ml)', 'margarita-measurements' ); ?></label>
                     <input id="<?php echo esc_attr( $instance ); ?>-pitcher" name="pitcher_ml" type="number" min="100" max="5000" step="50" value="1000" />
+                </div>
+                <div class="mm-party-fields"<?php echo 'party' === $mode ? '' : ' style="display:none;"'; ?>>
+                    <div class="mm-row"><label for="<?php echo esc_attr( $instance ); ?>-guests"><?php esc_html_e( 'Guests', 'margarita-measurements' ); ?></label><input id="<?php echo esc_attr( $instance ); ?>-guests" name="guests" type="number" min="1" max="500" value="10" /></div>
+                    <div class="mm-row"><label for="<?php echo esc_attr( $instance ); ?>-drinks-person"><?php esc_html_e( 'Drinks per person', 'margarita-measurements' ); ?></label><input id="<?php echo esc_attr( $instance ); ?>-drinks-person" name="drinks_per_person" type="number" min="0.1" max="12" step="0.1" value="2" /></div>
+                    <div class="mm-row"><label for="<?php echo esc_attr( $instance ); ?>-duration"><?php esc_html_e( 'Event duration (hours)', 'margarita-measurements' ); ?></label><input id="<?php echo esc_attr( $instance ); ?>-duration" name="event_duration" type="number" min="0.5" max="24" step="0.5" value="2" /></div>
+                    <div class="mm-row"><label for="<?php echo esc_attr( $instance ); ?>-standard-region"><?php esc_html_e( 'Standard drink', 'margarita-measurements' ); ?></label><select id="<?php echo esc_attr( $instance ); ?>-standard-region" name="standard_drink_region"><option value="AU">Australia (10g)</option><option value="US">United States (14g)</option><option value="UK">United Kingdom (8g)</option></select></div>
                 </div>
                 <div class="mm-row">
                     <label><input type="checkbox" name="wet_rim" value="1" checked /> <?php esc_html_e( 'Wet rim (more salt)', 'margarita-measurements' ); ?></label>

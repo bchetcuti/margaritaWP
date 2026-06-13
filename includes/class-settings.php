@@ -23,6 +23,8 @@ class MM_Settings {
         register_setting( 'mm_settings', 'mm_default_preset', array( 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field', 'default' => 'classic' ) );
         register_setting( 'mm_settings', 'mm_max_drinks', array( 'type' => 'integer', 'sanitize_callback' => 'absint', 'default' => 25 ) );
         register_setting( 'mm_settings', 'mm_show_abv', array( 'type' => 'boolean', 'sanitize_callback' => array( $this, 'sanitize_bool' ), 'default' => 1 ) );
+        register_setting( 'mm_settings', 'mm_standard_drink_region', array( 'type' => 'string', 'sanitize_callback' => array( $this, 'sanitize_standard_drink_region' ), 'default' => 'AU' ) );
+        register_setting( 'mm_settings', 'mm_bottle_sizes', array( 'type' => 'array', 'sanitize_callback' => array( $this, 'sanitize_bottle_sizes' ), 'default' => array() ) );
         register_setting( 'mm_custom_presets_settings', 'mm_custom_presets', array( 'type' => 'array', 'sanitize_callback' => array( $this, 'sanitize_custom_presets' ), 'default' => array() ) );
     }
     public function sanitize_unit( $val ) {
@@ -30,6 +32,20 @@ class MM_Settings {
         return in_array( $val, $allowed, true ) ? $val : 'ml';
     }
     public function sanitize_bool( $val ) { return $val ? 1 : 0; }
+    public function sanitize_standard_drink_region( $val ) {
+        $allowed = array( 'AU', 'US', 'UK' );
+        $val = strtoupper( sanitize_key( $val ) );
+        return in_array( $val, $allowed, true ) ? $val : 'AU';
+    }
+    public function sanitize_bottle_sizes( $value ) {
+        $defaults = array( 'tequila' => 700, 'triple' => 700, 'citrus' => 1000, 'agave' => 350, 'mixer' => 1000 );
+        $clean = array();
+        $value = is_array( $value ) ? $value : array();
+        foreach ( $defaults as $key => $default ) {
+            $clean[ $key ] = min( 5000, max( 50, (float) ( $value[ $key ] ?? $default ) ) );
+        }
+        return $clean;
+    }
     public function sanitize_custom_presets( $value ) {
         $existing = get_option( 'mm_custom_presets', array() );
         $presets  = is_array( $existing ) ? $existing : array();
@@ -100,6 +116,19 @@ class MM_Settings {
                     <tr>
                         <th scope="row"><?php esc_html_e( 'Show ABV', 'margarita-measurements' ); ?></th>
                         <td><input type="checkbox" name="mm_show_abv" value="1" <?php checked( get_option('mm_show_abv', 1 ), 1 ); ?> /></td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="mm_standard_drink_region"><?php esc_html_e( 'Standard drink default', 'margarita-measurements' ); ?></label></th>
+                        <td><select id="mm_standard_drink_region" name="mm_standard_drink_region"><?php foreach ( array( 'AU' => 'Australia (10g)', 'US' => 'United States (14g)', 'UK' => 'United Kingdom (8g)' ) as $region => $label ) : ?><option value="<?php echo esc_attr( $region ); ?>" <?php selected( get_option( 'mm_standard_drink_region', 'AU' ), $region ); ?>><?php echo esc_html( $label ); ?></option><?php endforeach; ?></select></td>
+                    </tr>
+                    <?php $mm_bottle_sizes = MM_Plugin::instance()->calc->bottle_sizes(); ?>
+                    <tr>
+                        <th scope="row"><?php esc_html_e( 'Party bottle sizes (ml)', 'margarita-measurements' ); ?></th>
+                        <td class="mm-bottle-size-settings">
+                            <?php foreach ( array( 'tequila' => 'Tequila', 'triple' => 'Triple sec', 'citrus' => 'Citrus juice', 'agave' => 'Agave syrup', 'mixer' => 'Flavour mixers' ) as $key => $label ) : ?>
+                                <label><?php echo esc_html( $label ); ?> <input type="number" name="mm_bottle_sizes[<?php echo esc_attr( $key ); ?>]" min="50" max="5000" step="50" value="<?php echo esc_attr( $mm_bottle_sizes[ $key ] ); ?>" /></label><br />
+                            <?php endforeach; ?>
+                        </td>
                     </tr>
                 </table>
                 <?php submit_button(); ?>
