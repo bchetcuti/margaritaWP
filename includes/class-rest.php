@@ -4,6 +4,12 @@ class MM_REST {
     public static function instance() { if ( null === self::$instance ) { self::$instance = new self(); } return self::$instance; }
     private function __construct() { add_action( 'rest_api_init', array( $this, 'routes' ) ); }
     public function routes() {
+
+        register_rest_route( 'margarita/v1', '/presets', array(
+            'methods'  => 'GET',
+            'permission_callback' => '__return_true',
+            'callback' => array( $this, 'presets' ),
+        ) );
         register_rest_route( 'margarita/v1', '/calculate', array(
             'methods'  => 'GET',
             'permission_callback' => '__return_true',
@@ -18,6 +24,25 @@ class MM_REST {
             ),
             'callback' => array( $this, 'calc' ),
         ) );
+    }
+
+    public function presets( WP_REST_Request $request ) {
+        $presets = MM_Plugin::instance()->calc->list_presets();
+        $data    = array();
+
+        foreach ( $presets as $key => $preset ) {
+            $key = sanitize_key( $key );
+            if ( '' === $key ) {
+                continue;
+            }
+            $data[] = array(
+                'key'   => $key,
+                'label' => sanitize_text_field( $preset['label'] ?? ucfirst( $key ) ),
+                'note'  => sanitize_text_field( $preset['note'] ?? '' ),
+            );
+        }
+
+        return rest_ensure_response( $data );
     }
     public function calc( WP_REST_Request $request ) {
         $max  = (int) get_option( 'mm_max_drinks', 25 );
