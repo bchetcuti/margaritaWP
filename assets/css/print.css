@@ -1,0 +1,16 @@
+@media print {
+    body > *:not(#mm-print-frame) { display: none !important; }
+    #mm-print-frame {
+        display: block !important;
+        font-family: Georgia, serif;
+        padding: 2cm;
+        max-width: 14cm;
+        margin: auto;
+    }
+    #mm-print-frame h2 { font-size: 1.6rem; margin-bottom: .25rem; }
+    #mm-print-frame .mm-print-meta { font-size: .85rem; color: #555; margin-bottom: 1rem; }
+    #mm-print-frame table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+    #mm-print-frame td, #mm-print-frame th { padding: .35rem .5rem; border-bottom: 1px solid #ccc; text-align: left; }
+    #mm-print-frame .mm-print-footer { font-size: .75rem; color: #888; margin-top: 1.5rem; border-top: 1px solid #ccc; padding-top: .5rem; }
+    @page { size: A5 portrait; margin: 1cm; }
+}
