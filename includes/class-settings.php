@@ -34,7 +34,7 @@ class MM_Settings {
     public function sanitize_bool( $val ) { return $val ? 1 : 0; }
     public function sanitize_standard_drink_region( $val ) {
         $allowed = array( 'AU', 'US', 'UK' );
-        $val = strtoupper( sanitize_key( $val ) );
+        $val = strtoupper( sanitize_key( strtolower( (string) $val ) ) );
         return in_array( $val, $allowed, true ) ? $val : 'AU';
     }
     public function sanitize_bottle_sizes( $value ) {

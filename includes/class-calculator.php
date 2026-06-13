@@ -178,7 +178,7 @@ class MM_Calculator {
     }
 
     public function normalise_standard_drink_region( $region ) {
-        $region  = strtoupper( sanitize_key( $region ) );
+        $region  = strtoupper( sanitize_key( strtolower( (string) $region ) ) );
         $regions = $this->standard_drink_regions();
         return isset( $regions[ $region ] ) ? $region : 'AU';
     }

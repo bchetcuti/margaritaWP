@@ -32,6 +32,13 @@ final class CalculatorTest extends TestCase {
         $c = new MM_Calculator();
         $this->assertEquals('none', $c->normalise_flavour_key('bad-flavour'));
     }
+
+    public function test_standard_drink_region_normalises_configured_defaults() {
+        $c = new MM_Calculator();
+        $this->assertEquals('US', $c->normalise_standard_drink_region('US'));
+        $this->assertEquals('UK', $c->normalise_standard_drink_region('uk'));
+        $this->assertEquals('AU', $c->normalise_standard_drink_region('invalid'));
+    }
     public function test_party_planning_outputs_shopping_list_and_au_standard_drinks() {
         $c = new MM_Calculator();
         $out = $c->party([ 'preset' => 'classic', 'guests' => 10, 'drinks_per_person' => 2, 'event_duration' => 3, 'unit' => 'ml', 'wet_rim' => true ]);

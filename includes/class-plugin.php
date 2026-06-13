@@ -40,6 +40,7 @@ class MM_Plugin {
         $default_preset = get_option( 'mm_default_preset', 'classic' );
         $max_drinks     = (int) get_option( 'mm_max_drinks', 25 );
         $admin_show_abv = (bool) get_option( 'mm_show_abv', 1 );
+        $default_standard_drink_region = $this->calc->normalise_standard_drink_region( get_option( 'mm_standard_drink_region', 'AU' ) );
         $presets        = $this->calc->list_presets();
         $flavours       = $this->calc->list_flavours();
         $allowed_units  = array( 'ml', 'oz', 'shot', 'nip' );
@@ -113,7 +114,7 @@ class MM_Plugin {
                     <div class="mm-row"><label for="<?php echo esc_attr( $instance ); ?>-guests"><?php esc_html_e( 'Guests', 'margarita-measurements' ); ?></label><input id="<?php echo esc_attr( $instance ); ?>-guests" name="guests" type="number" min="1" max="500" value="10" /></div>
                     <div class="mm-row"><label for="<?php echo esc_attr( $instance ); ?>-drinks-person"><?php esc_html_e( 'Drinks per person', 'margarita-measurements' ); ?></label><input id="<?php echo esc_attr( $instance ); ?>-drinks-person" name="drinks_per_person" type="number" min="0.1" max="12" step="0.1" value="2" /></div>
                     <div class="mm-row"><label for="<?php echo esc_attr( $instance ); ?>-duration"><?php esc_html_e( 'Event duration (hours)', 'margarita-measurements' ); ?></label><input id="<?php echo esc_attr( $instance ); ?>-duration" name="event_duration" type="number" min="0.5" max="24" step="0.5" value="2" /></div>
-                    <div class="mm-row"><label for="<?php echo esc_attr( $instance ); ?>-standard-region"><?php esc_html_e( 'Standard drink', 'margarita-measurements' ); ?></label><select id="<?php echo esc_attr( $instance ); ?>-standard-region" name="standard_drink_region"><option value="AU">Australia (10g)</option><option value="US">United States (14g)</option><option value="UK">United Kingdom (8g)</option></select></div>
+                    <div class="mm-row"><label for="<?php echo esc_attr( $instance ); ?>-standard-region"><?php esc_html_e( 'Standard drink', 'margarita-measurements' ); ?></label><select id="<?php echo esc_attr( $instance ); ?>-standard-region" name="standard_drink_region"><?php foreach ( $this->calc->standard_drink_regions() as $region => $details ) : ?><option value="<?php echo esc_attr( $region ); ?>" <?php selected( $default_standard_drink_region, $region ); ?>><?php echo esc_html( $details['label'] ); ?></option><?php endforeach; ?></select></div>
                 </div>
                 <div class="mm-row">
                     <label><input type="checkbox" name="wet_rim" value="1" checked /> <?php esc_html_e( 'Wet rim (more salt)', 'margarita-measurements' ); ?></label>
