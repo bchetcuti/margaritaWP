@@ -34,7 +34,11 @@
         if (d.flavour && d.flavour.key !== 'none') {
             lines.push('Flavour: ' + d.flavour.label);
         }
-        lines.push(d.mode === 'pitcher' ? 'Pitcher: ' + d.pitcher_ml + ' ml total' : 'Drinks: ' + d.drinks);
+        if (d.mode === 'party') {
+            lines.push('Party: ' + d.guests + ' guests, ' + d.total_margaritas + ' margaritas');
+        } else {
+            lines.push(d.mode === 'pitcher' ? 'Pitcher: ' + d.pitcher_ml + ' ml total' : 'Drinks: ' + d.drinks);
+        }
         lines.push('Ingredients:');
         ingredientRows(d).forEach(function(row){ lines.push('- ' + row[0] + ': ' + row[1]); });
         if (typeof d.abv !== 'undefined') {
@@ -69,7 +73,9 @@
     }
 
     $(document).on('change', 'select[name="mode"]', function(){
-        $(this).closest('.mm-form').find('.mm-pitcher-row').toggle( $(this).val() === 'pitcher' );
+        var mode = $(this).val();
+        $(this).closest('.mm-form').find('.mm-pitcher-row').toggle(mode === 'pitcher');
+        $(this).closest('.mm-form').find('.mm-party-fields').toggle(mode === 'party');
     });
 
     $(document).on('submit', '.mm-form', function(e){
@@ -86,7 +92,7 @@
         data.action = 'mm_calculate';
         data.nonce  = MM_Ajax.nonce;
 
-        if (data.mode === 'pitcher') {
+        if (data.mode === 'pitcher' || data.mode === 'party') {
             delete data.drinks;
         }
 
@@ -97,9 +103,11 @@
             }
             var d = resp.data;
             $results.data('mm-result', d);
-            var title = d.mode === 'pitcher'
-                ? 'Pitcher (' + esc(d.pitcher_ml) + ' ml total) — ' + esc(d.preset_label || titleCase(d.preset))
-                : 'Batch for ' + esc(d.drinks) + ' drink(s) — ' + esc(d.preset_label || titleCase(d.preset));
+            var title = d.mode === 'party'
+                ? 'Party plan for ' + esc(d.guests) + ' guest(s) — ' + esc(d.total_margaritas) + ' margaritas'
+                : (d.mode === 'pitcher'
+                    ? 'Pitcher (' + esc(d.pitcher_ml) + ' ml total) — ' + esc(d.preset_label || titleCase(d.preset))
+                    : 'Batch for ' + esc(d.drinks) + ' drink(s) — ' + esc(d.preset_label || titleCase(d.preset)));
             if (d.flavour && d.flavour.key !== 'none') {
                 title += ' · ' + esc(d.flavour.label);
             }
@@ -121,6 +129,27 @@
             }
             if (d.salt_rim) {
                 html += '<p>🧂 <strong>Salt rim:</strong> ~' + esc(d.salt_rim.grams) + 'g (' + esc(d.salt_rim.tsps) + ' tsp) — ' + esc(d.salt_rim.wet_dry) + ' rim</p>';
+            }
+            if (d.mode === 'party') {
+                html += '<h4>Shopping list</h4>';
+                ['spirits', 'mixers'].forEach(function(group){
+                    if (!d.shopping_list || !d.shopping_list[group] || !d.shopping_list[group].length) { return; }
+                    html += '<h5>' + esc(titleCase(group)) + '</h5><ul>';
+                    d.shopping_list[group].forEach(function(item){
+                        html += '<li><strong>' + esc(item.label) + ':</strong> ' + esc(item.display) + ' ' + esc(d.suffix) + ' (' + esc(item.bottles) + ' × ' + esc(item.bottle_ml) + ' ml)</li>';
+                    });
+                    html += '</ul>';
+                });
+                if (d.garnish_extras) {
+                    html += '<h4>Garnish & extras</h4><ul>';
+                    html += '<li>Lime wedges: ' + esc(d.garnish_extras.lime_wedges) + ' (~' + esc(d.garnish_extras.limes) + ' limes)</li>';
+                    html += '<li>Ice: ~' + esc(d.garnish_extras.ice_kg) + ' kg</li>';
+                    html += '<li>Rim salt: ~' + esc(d.garnish_extras.salt.grams) + 'g</li>';
+                    html += '</ul>';
+                }
+                if (d.responsible_drinking) {
+                    html += '<p class="mm-note"><strong>Responsible drinking:</strong> ' + esc(d.responsible_drinking.note) + ' Estimated total standard drinks: ' + esc(d.responsible_drinking.estimated_standard_drinks) + '.</p>';
+                }
             }
             html += '<div class="mm-actions">';
             html += '<button class="mm-print mm-btn-secondary" type="button">Print</button>';

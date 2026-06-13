@@ -168,6 +168,103 @@ class MM_Calculator {
         );
     }
 
+
+    public function standard_drink_regions() {
+        return array(
+            'AU' => array( 'label' => __( 'Australia (10g)', 'margarita-measurements' ), 'grams' => 10.0 ),
+            'US' => array( 'label' => __( 'United States (14g)', 'margarita-measurements' ), 'grams' => 14.0 ),
+            'UK' => array( 'label' => __( 'United Kingdom unit (8g)', 'margarita-measurements' ), 'grams' => 8.0 ),
+        );
+    }
+
+    public function normalise_standard_drink_region( $region ) {
+        $region  = strtoupper( sanitize_key( strtolower( (string) $region ) ) );
+        $regions = $this->standard_drink_regions();
+        return isset( $regions[ $region ] ) ? $region : 'AU';
+    }
+
+    public function bottle_sizes() {
+        $defaults = array(
+            'tequila' => 700.0,
+            'triple'  => 700.0,
+            'citrus'  => 1000.0,
+            'agave'   => 350.0,
+            'mixer'   => 1000.0,
+        );
+        $saved = get_option( 'mm_bottle_sizes', array() );
+        if ( is_array( $saved ) ) {
+            foreach ( $defaults as $key => $default ) {
+                if ( isset( $saved[ $key ] ) ) {
+                    $defaults[ $key ] = min( 5000.0, max( 50.0, (float) $saved[ $key ] ) );
+                }
+            }
+        }
+        return $defaults;
+    }
+
+    protected function bottle_count( $ml, $bottle_ml ) {
+        $bottle_ml = max( 1.0, (float) $bottle_ml );
+        return (int) ceil( max( 0.0, (float) $ml ) / $bottle_ml );
+    }
+
+    protected function party_item( $label, $ml, $unit, $bottle_ml, $type ) {
+        return array(
+            'label'     => $label,
+            'type'      => $type,
+            'ml'        => $ml,
+            'display'   => $this->ml_to_unit( $ml, $unit ),
+            'bottle_ml' => $bottle_ml,
+            'bottles'   => $this->bottle_count( $ml, $bottle_ml ),
+        );
+    }
+
+    public function party( $args ) {
+        $guests       = min( 500, max( 1, (int) ( $args['guests'] ?? 10 ) ) );
+        $per_person   = min( 12.0, max( 0.1, (float) ( $args['drinks_per_person'] ?? 2 ) ) );
+        $duration     = min( 24.0, max( 0.5, (float) ( $args['event_duration'] ?? 2 ) ) );
+        $total_drinks = (int) ceil( $guests * $per_person );
+        $unit         = $args['unit'] ?? 'ml';
+        $result       = $this->batch( array_merge( $args, array( 'drinks' => $total_drinks ) ) );
+        $presets      = $this->list_presets();
+        $preset       = $presets[ $result['preset'] ] ?? $this->presets['classic'];
+        $sizes        = $this->bottle_sizes();
+        $region_key   = $this->normalise_standard_drink_region( $args['standard_drink_region'] ?? get_option( 'mm_standard_drink_region', 'AU' ) );
+        $regions      = $this->standard_drink_regions();
+        $std_grams    = $regions[ $region_key ]['grams'];
+        $tequila_ml   = $result['quantities']['tequila']['ml'];
+        $triple_ml    = $result['quantities']['triple']['ml'];
+        $triple_abv   = ( $result['quantities']['total_ml'] > 0 && $triple_ml > 0 ) ? ( $preset['triple_abv'] ?? 0.40 ) : 0.0;
+        $alc_grams    = ( ( $tequila_ml * 0.40 ) + ( $triple_ml * $triple_abv ) ) * 0.789;
+        $shopping     = array(
+            'spirits' => array(),
+            'mixers'  => array(),
+        );
+        if ( $tequila_ml > 0 ) { $shopping['spirits'][] = $this->party_item( $result['quantities']['tequila']['label'] ?? __( 'Tequila', 'margarita-measurements' ), $tequila_ml, $unit, $sizes['tequila'], 'spirit' ); }
+        if ( $triple_ml > 0 ) { $shopping['spirits'][] = $this->party_item( __( 'Triple sec', 'margarita-measurements' ), $triple_ml, $unit, $sizes['triple'], 'spirit' ); }
+        $shopping['mixers'][] = $this->party_item( __( 'Citrus juice', 'margarita-measurements' ), $result['quantities']['citrus']['ml'], $unit, $sizes['citrus'], 'mixer' );
+        if ( $result['quantities']['agave']['ml'] > 0 ) { $shopping['mixers'][] = $this->party_item( __( 'Agave syrup', 'margarita-measurements' ), $result['quantities']['agave']['ml'], $unit, $sizes['agave'], 'mixer' ); }
+        if ( ! empty( $result['quantities']['flavour'] ) && $result['quantities']['flavour']['ml'] > 0 ) { $shopping['mixers'][] = $this->party_item( $result['quantities']['flavour']['label'], $result['quantities']['flavour']['ml'], $unit, $sizes['mixer'], 'mixer' ); }
+        $result['mode'] = 'party';
+        $result['guests'] = $guests;
+        $result['drinks_per_person'] = $per_person;
+        $result['event_duration'] = $duration;
+        $result['total_margaritas'] = $total_drinks;
+        $result['shopping_list'] = $shopping;
+        $result['garnish_extras'] = array(
+            'lime_wedges' => $total_drinks,
+            'limes'       => (int) ceil( $total_drinks / 8 ),
+            'salt'        => $this->salt_rim( $total_drinks, ! empty( $args['wet_rim'] ) ),
+            'ice_kg'      => round( $total_drinks * (float) ( $preset['ice_factor'] ?? 1.0 ) * 0.18, 1 ),
+        );
+        $result['responsible_drinking'] = array(
+            'region' => $region_key,
+            'standard_drink_grams' => $std_grams,
+            'estimated_standard_drinks' => round( $std_grams > 0 ? $alc_grams / $std_grams : 0, 1 ),
+            'note' => sprintf( __( 'Plan water, food, transport and alcohol-free options. Estimates use %1$s standard drinks at %2$sg alcohol each; Australia defaults to 10g.', 'margarita-measurements' ), $region_key, $std_grams ),
+        );
+        return $result;
+    }
+
     public function batch( $args ) {
         $preset_key  = isset( $args['preset'] ) ? $args['preset'] : 'classic';
         $drinks      = max( 1, (int) ( $args['drinks'] ?? 1 ) );

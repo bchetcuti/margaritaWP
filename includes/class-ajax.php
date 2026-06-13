@@ -18,6 +18,10 @@ class MM_Ajax {
             'unit'       => sanitize_key( wp_unslash( $_POST['unit'] ?? get_option( 'mm_unit', 'ml' ) ) ),
             'flavour'    => sanitize_key( wp_unslash( $_POST['flavour'] ?? 'none' ) ),
             'wet_rim'    => ! empty( $_POST['wet_rim'] ),
+            'guests'     => min( 500, max( 1, absint( wp_unslash( $_POST['guests'] ?? 10 ) ) ) ),
+            'drinks_per_person' => min( 12, max( 0.1, (float) wp_unslash( $_POST['drinks_per_person'] ?? 2 ) ) ),
+            'event_duration' => min( 24, max( 0.5, (float) wp_unslash( $_POST['event_duration'] ?? 2 ) ) ),
+            'standard_drink_region' => sanitize_key( wp_unslash( $_POST['standard_drink_region'] ?? get_option( 'mm_standard_drink_region', 'AU' ) ) ),
         );
         $calc            = MM_Plugin::instance()->calc;
         $allowed_presets = array_keys( $calc->list_presets() );
@@ -25,12 +29,26 @@ class MM_Ajax {
         $args['preset']  = in_array( $args['preset'], $allowed_presets, true ) ? $args['preset'] : 'classic';
         $args['unit']    = in_array( $args['unit'], $allowed_units, true ) ? $args['unit'] : get_option( 'mm_unit', 'ml' );
         $args['flavour'] = $calc->normalise_flavour_key( $args['flavour'] );
-        $mode            = in_array( $mode, array( 'drinks', 'pitcher' ), true ) ? $mode : 'drinks';
-        $data            = 'pitcher' === $mode ? $calc->pitcher( $args ) : $calc->batch( $args );
+        $mode            = in_array( $mode, array( 'drinks', 'pitcher', 'party' ), true ) ? $mode : 'drinks';
+        if ( 'party' === $mode ) {
+            $args['standard_drink_region'] = $calc->normalise_standard_drink_region( $args['standard_drink_region'] );
+            $data = $calc->party( $args );
+        } else {
+            $data = 'pitcher' === $mode ? $calc->pitcher( $args ) : $calc->batch( $args );
+        }
         foreach ( $data['quantities'] as &$v ) {
             if ( is_array( $v ) && isset( $v['display'] ) ) { $v['display'] = round( $v['display'], 2 ); }
         }
         unset( $v );
+        if ( ! empty( $data['shopping_list'] ) ) {
+            foreach ( $data['shopping_list'] as &$group ) {
+                foreach ( $group as &$item ) {
+                    if ( isset( $item['display'] ) ) { $item['display'] = round( $item['display'], 2 ); }
+                }
+                unset( $item );
+            }
+            unset( $group );
+        }
         $data['abv'] = round( $data['abv'], 1 );
         if ( empty( $_POST['show_abv'] ) || ! empty( $data['flavour']['no_alcohol'] ) ) {
             unset( $data['abv'] );
