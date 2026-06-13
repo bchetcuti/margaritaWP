@@ -2,7 +2,7 @@
 Contributors: Bryan Chetcuti
 Requires at least: 5.8
 Tested up to: 7.0
-Stable tag: 2.3.0
+Stable tag: 2.4.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -13,6 +13,10 @@ Calculate perfect margarita ratios with presets, unit switching, and ABV estimat
 - Presets: Classic, Tommy’s, Frozen, Skinny
 - Units: ml, oz, shot, nip
 - ABV estimate (toggle)
+- Flavour variations: none, spicy, mango, watermelon, strawberry, coconut, virgin
+- Shortcode attributes for preset, unit, flavour, drinks, show_abv, mode, and title
+- Inline clipboard copy confirmation
+- Themeable CSS variables with dark mode support
 - Gutenberg block + shortcode `[margarita_measurements]`
 - REST endpoint: `/wp-json/margarita/v1/calculate?preset=classic&drinks=4&unit=ml`
 - AJAX form (no page reload), accessible, i18n-ready
@@ -36,6 +40,12 @@ Yes, in **Settings → Margarita Measurements**.
 Yes. The shortcode works anywhere.
 
 == Changelog ==
+= 2.4.0 =
+- Feature: Flavour variations for spicy, mango, watermelon, strawberry, coconut, and virgin margaritas.
+- Feature: Shortcode attributes for per-instance preset, unit, flavour, drinks, show_abv, mode, and title overrides.
+- Enhancement: Copy action now uses inline “✓ Copied!” feedback with a clipboard fallback and no alert.
+- Enhancement: Frontend styles now use CSS custom properties and support prefers-color-scheme dark mode.
+
 = 2.3.0 =
 - WordPress 7.0 compatibility confirmed; bumped Tested up to.
 - Fixed MM_VERSION constant mismatch (was 2.1.0, now 2.3.0).
