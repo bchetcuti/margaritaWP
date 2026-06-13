@@ -52,4 +52,28 @@ final class CalculatorTest extends TestCase {
         $this->assertEquals('AU', $out['responsible_drinking']['region']);
         $this->assertGreaterThan(0, $out['garnish_extras']['limes']);
     }
+    public function test_abv_overrides_change_alcohol_estimates() {
+        $c = new MM_Calculator();
+        $base = $c->batch([ 'preset' => 'classic', 'drinks' => 1, 'unit' => 'ml' ]);
+        $strong = $c->batch([ 'preset' => 'classic', 'drinks' => 1, 'unit' => 'ml', 'tequila_abv' => 55, 'triple_sec_abv' => 45 ]);
+        $this->assertGreaterThan($base['abv'], $strong['abv']);
+        $this->assertGreaterThan($base['nutrition']['alcohol_grams'], $strong['nutrition']['alcohol_grams']);
+        $this->assertEquals(55.0, $strong['abv_overrides']['tequila_abv']);
+        $this->assertEquals(45.0, $strong['abv_overrides']['triple_sec_abv']);
+    }
+
+    public function test_nutrition_standard_regions_and_virgin_zero_alcohol() {
+        $c = new MM_Calculator();
+        $au = $c->batch([ 'preset' => 'classic', 'drinks' => 1, 'unit' => 'ml', 'standard_region' => 'AU' ]);
+        $uk = $c->batch([ 'preset' => 'classic', 'drinks' => 1, 'unit' => 'ml', 'standard_region' => 'UK' ]);
+        $this->assertEquals('AU', $au['nutrition']['region']);
+        $this->assertEquals(10.0, $au['nutrition']['standard_drink_grams']);
+        $this->assertEquals(8.0, $uk['nutrition']['standard_drink_grams']);
+        $this->assertGreaterThan($au['nutrition']['standard_drinks'], $uk['nutrition']['standard_drinks']);
+
+        $virgin = $c->batch([ 'preset' => 'classic', 'drinks' => 1, 'unit' => 'ml', 'flavour' => 'virgin' ]);
+        $this->assertEquals(0.0, $virgin['nutrition']['alcohol_grams']);
+        $this->assertEquals(0.0, $virgin['nutrition']['standard_drinks']);
+    }
+
 }

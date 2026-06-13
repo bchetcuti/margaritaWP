@@ -21,6 +21,9 @@ class MM_REST {
                 'unit'       => array( 'sanitize_callback' => 'sanitize_text_field' ),
                 'wet_rim'    => array( 'sanitize_callback' => 'rest_sanitize_boolean' ),
                 'flavour'    => array( 'sanitize_callback' => 'sanitize_key' ),
+                'standard_region' => array( 'sanitize_callback' => 'sanitize_key' ),
+                'tequila_abv' => array( 'sanitize_callback' => 'floatval' ),
+                'triple_sec_abv' => array( 'sanitize_callback' => 'floatval' ),
             ),
             'callback' => array( $this, 'calc' ),
         ) );
@@ -53,6 +56,9 @@ class MM_REST {
             'pitcher_ml' => min( 5000, max( 100, (float) ( $request->get_param( 'pitcher_ml' ) ?: 1000 ) ) ),
             'unit'       => $request->get_param( 'unit' ) ?: get_option( 'mm_unit', 'ml' ),
             'flavour'    => $request->get_param( 'flavour' ) ?: 'none',
+            'standard_region' => $request->get_param( 'standard_region' ) ?: 'AU',
+            'tequila_abv' => $request->get_param( 'tequila_abv' ) ?: 40,
+            'triple_sec_abv' => $request->get_param( 'triple_sec_abv' ) ?: 40,
             'wet_rim'    => null === $request->get_param( 'wet_rim' ) ? true : (bool) $request->get_param( 'wet_rim' ),
         );
         $calc            = MM_Plugin::instance()->calc;
@@ -61,6 +67,9 @@ class MM_REST {
         $args['preset']  = in_array( $args['preset'], $allowed_presets, true ) ? $args['preset'] : 'classic';
         $args['unit']    = in_array( $args['unit'], $allowed_units, true ) ? $args['unit'] : get_option( 'mm_unit', 'ml' );
         $args['flavour'] = $calc->normalise_flavour_key( $args['flavour'] );
+        $args['standard_region'] = $calc->normalise_standard_drink_region( $args['standard_region'] );
+        $args['tequila_abv'] = $calc->sanitize_tequila_abv( $args['tequila_abv'] );
+        $args['triple_sec_abv'] = $calc->sanitize_triple_sec_abv( $args['triple_sec_abv'] );
         $mode            = in_array( $mode, array( 'drinks', 'pitcher' ), true ) ? $mode : 'drinks';
         $data            = 'pitcher' === $mode ? $calc->pitcher( $args ) : $calc->batch( $args );
         foreach ( $data['quantities'] as &$v ) {

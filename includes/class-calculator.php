@@ -93,8 +93,62 @@ class MM_Calculator {
         }
     }
 
-    public function abv_estimate( $tequila_ml, $triple_ml, $total_ml, $triple_abv = 0.40 ) {
-        $alc_ml = ( $tequila_ml * 0.40 ) + ( $triple_ml * $triple_abv );
+    public function sanitize_tequila_abv( $value ) {
+        if ( ! is_numeric( $value ) ) {
+            return 40.0;
+        }
+        return min( 55.0, max( 35.0, (float) $value ) );
+    }
+
+    public function sanitize_triple_sec_abv( $value ) {
+        if ( ! is_numeric( $value ) ) {
+            return 40.0;
+        }
+        return min( 45.0, max( 15.0, (float) $value ) );
+    }
+
+    public function normalise_abv_overrides( $args = array(), $preset = array() ) {
+        $preset_triple_abv = isset( $preset['triple_abv'] ) ? ( (float) $preset['triple_abv'] * 100 ) : 40.0;
+        return array(
+            'tequila_abv'    => $this->sanitize_tequila_abv( $args['tequila_abv'] ?? 40.0 ),
+            'triple_sec_abv' => $this->sanitize_triple_sec_abv( $args['triple_sec_abv'] ?? $preset_triple_abv ),
+        );
+    }
+
+    public function calculate_alcohol_ml( $quantities, $abv_overrides = array() ) {
+        $tequila_abv    = $this->sanitize_tequila_abv( $abv_overrides['tequila_abv'] ?? 40.0 ) / 100;
+        $triple_sec_abv = $this->sanitize_triple_sec_abv( $abv_overrides['triple_sec_abv'] ?? 40.0 ) / 100;
+        $tequila_ml     = isset( $quantities['tequila']['ml'] ) ? (float) $quantities['tequila']['ml'] : 0.0;
+        $triple_ml      = isset( $quantities['triple']['ml'] ) ? (float) $quantities['triple']['ml'] : 0.0;
+        return ( $tequila_ml * $tequila_abv ) + ( $triple_ml * $triple_sec_abv );
+    }
+
+    public function calculate_alcohol_grams( $alcohol_ml ) {
+        return max( 0.0, (float) $alcohol_ml ) * 0.789;
+    }
+
+    public function calculate_standard_drinks( $alcohol_grams, $region ) {
+        $regions = $this->standard_drink_regions();
+        $region  = $this->normalise_standard_drink_region( $region );
+        $grams   = $regions[ $region ]['grams'];
+        return $grams > 0 ? (float) $alcohol_grams / $grams : 0.0;
+    }
+
+    public function calculate_calories( $quantities, $abv_overrides = array() ) {
+        $alcohol_grams   = $this->calculate_alcohol_grams( $this->calculate_alcohol_ml( $quantities, $abv_overrides ) );
+        $alcohol_kcal    = $alcohol_grams * 7;
+        $sweetener_ml    = isset( $quantities['agave']['ml'] ) ? (float) $quantities['agave']['ml'] : 0.0;
+        $sweetener_kcal  = $sweetener_ml * 3.1;
+        return array(
+            'total_kcal'     => $alcohol_kcal + $sweetener_kcal,
+            'alcohol_kcal'   => $alcohol_kcal,
+            'sweetener_kcal' => $sweetener_kcal,
+            'includes'       => $sweetener_ml > 0 ? __( 'Includes alcohol and sweetener estimate.', 'margarita-measurements' ) : __( 'Alcohol calories only.', 'margarita-measurements' ),
+        );
+    }
+
+    public function abv_estimate( $tequila_ml, $triple_ml, $total_ml, $triple_abv = 0.40, $tequila_abv = 0.40 ) {
+        $alc_ml = ( $tequila_ml * $tequila_abv ) + ( $triple_ml * $triple_abv );
         if ( $total_ml <= 0 ) {
             return 0;
         }
@@ -172,8 +226,8 @@ class MM_Calculator {
     public function standard_drink_regions() {
         return array(
             'AU' => array( 'label' => __( 'Australia (10g)', 'margarita-measurements' ), 'grams' => 10.0 ),
+            'UK' => array( 'label' => __( 'United Kingdom (8g)', 'margarita-measurements' ), 'grams' => 8.0 ),
             'US' => array( 'label' => __( 'United States (14g)', 'margarita-measurements' ), 'grams' => 14.0 ),
-            'UK' => array( 'label' => __( 'United Kingdom unit (8g)', 'margarita-measurements' ), 'grams' => 8.0 ),
         );
     }
 
@@ -181,6 +235,31 @@ class MM_Calculator {
         $region  = strtoupper( sanitize_key( strtolower( (string) $region ) ) );
         $regions = $this->standard_drink_regions();
         return isset( $regions[ $region ] ) ? $region : 'AU';
+    }
+
+    protected function add_nutrition( $result, $args, $abv_overrides ) {
+        $region          = $this->normalise_standard_drink_region( $args['standard_region'] ?? $args['standard_drink_region'] ?? 'AU' );
+        $regions         = $this->standard_drink_regions();
+        $alcohol_ml      = $this->calculate_alcohol_ml( $result['quantities'], $abv_overrides );
+        $alcohol_grams   = $this->calculate_alcohol_grams( $alcohol_ml );
+        $standard_drinks = $this->calculate_standard_drinks( $alcohol_grams, $region );
+        $calories        = $this->calculate_calories( $result['quantities'], $abv_overrides );
+        $divisor         = isset( $result['drinks'] ) ? max( 1, (int) $result['drinks'] ) : 1;
+        $result['nutrition'] = array(
+            'region'                => $region,
+            'region_label'          => $regions[ $region ]['label'],
+            'standard_drink_grams'  => $regions[ $region ]['grams'],
+            'alcohol_ml'            => round( $alcohol_ml, 2 ),
+            'alcohol_grams'         => round( $alcohol_grams, 2 ),
+            'alcohol_grams_per_drink' => round( $alcohol_grams / $divisor, 2 ),
+            'standard_drinks'       => round( $standard_drinks, 2 ),
+            'standard_drinks_per_drink' => round( $standard_drinks / $divisor, 2 ),
+            'calories'              => round( $calories['total_kcal'] ),
+            'calories_per_drink'    => round( $calories['total_kcal'] / $divisor ),
+            'calorie_note'          => $calories['includes'],
+            'help'                  => __( 'Approximate values for recipe planning only.', 'margarita-measurements' ),
+        );
+        return $result;
     }
 
     public function bottle_sizes() {
@@ -233,8 +312,8 @@ class MM_Calculator {
         $std_grams    = $regions[ $region_key ]['grams'];
         $tequila_ml   = $result['quantities']['tequila']['ml'];
         $triple_ml    = $result['quantities']['triple']['ml'];
-        $triple_abv   = ( $result['quantities']['total_ml'] > 0 && $triple_ml > 0 ) ? ( $preset['triple_abv'] ?? 0.40 ) : 0.0;
-        $alc_grams    = ( ( $tequila_ml * 0.40 ) + ( $triple_ml * $triple_abv ) ) * 0.789;
+        $abv_overrides = $this->normalise_abv_overrides( $args, $preset );
+        $alc_grams    = $this->calculate_alcohol_grams( $this->calculate_alcohol_ml( $result['quantities'], $abv_overrides ) );
         $shopping     = array(
             'spirits' => array(),
             'mixers'  => array(),
@@ -262,7 +341,7 @@ class MM_Calculator {
             'estimated_standard_drinks' => round( $std_grams > 0 ? $alc_grams / $std_grams : 0, 1 ),
             'note' => sprintf( __( 'Plan water, food, transport and alcohol-free options. Estimates use %1$s standard drinks at %2$sg alcohol each; Australia defaults to 10g.', 'margarita-measurements' ), $region_key, $std_grams ),
         );
-        return $result;
+        return $this->add_nutrition( $result, $args, $abv_overrides );
     }
 
     public function batch( $args ) {
@@ -284,13 +363,14 @@ class MM_Calculator {
         $amounts     = $this->apply_flavour( $amounts, $flavour_key, $drinks );
         $ice_mul     = $preset['ice_factor'];
         $total_ml    = $amounts['tequila_ml'] + $amounts['citrus_ml'] + $amounts['triple_ml'] + $amounts['agave_ml'] + $amounts['extra_ml'];
-        $meta        = $this->flavour_meta( $flavour_key );
-        $abv         = $meta['no_alcohol'] ? 0 : $this->abv_estimate( $amounts['tequila_ml'], $amounts['triple_ml'], $total_ml, $preset['triple_abv'] ?? 0.40 );
+        $meta          = $this->flavour_meta( $flavour_key );
+        $abv_overrides = $this->normalise_abv_overrides( $args, $preset );
+        $abv           = $meta['no_alcohol'] ? 0 : $this->abv_estimate( $amounts['tequila_ml'], $amounts['triple_ml'], $total_ml, $abv_overrides['triple_sec_abv'] / 100, $abv_overrides['tequila_abv'] / 100 );
         if ( ! empty( $amounts['extra'] ) ) {
             $amounts['extra']['display'] = $this->ml_to_unit( $amounts['extra']['ml'], $unit );
         }
 
-        return array(
+        $result = array(
             'mode'       => 'drinks',
             'drinks'     => $drinks,
             'unit'       => $unit,
@@ -309,7 +389,9 @@ class MM_Calculator {
             'preset_label' => $preset['label'] ?? ucfirst( $preset_key ),
             'flavour'    => $meta,
             'suffix'     => $this->unit_suffix( $unit ),
+            'abv_overrides' => $abv_overrides,
         );
+        return $this->add_nutrition( $result, $args, $abv_overrides );
     }
 
     public function pitcher( $args ) {
@@ -335,14 +417,15 @@ class MM_Calculator {
         );
         $amounts = $this->apply_flavour( $amounts, $flavour_key, $scale );
         $total_ml = $amounts['tequila_ml'] + $amounts['citrus_ml'] + $amounts['triple_ml'] + $amounts['agave_ml'] + $amounts['extra_ml'];
-        $meta     = $this->flavour_meta( $flavour_key );
-        $abv      = $meta['no_alcohol'] ? 0 : $this->abv_estimate( $amounts['tequila_ml'], $amounts['triple_ml'], $total_ml, $preset['triple_abv'] ?? 0.40 );
+        $meta          = $this->flavour_meta( $flavour_key );
+        $abv_overrides = $this->normalise_abv_overrides( $args, $preset );
+        $abv           = $meta['no_alcohol'] ? 0 : $this->abv_estimate( $amounts['tequila_ml'], $amounts['triple_ml'], $total_ml, $abv_overrides['triple_sec_abv'] / 100, $abv_overrides['tequila_abv'] / 100 );
         $drinks   = max( 1, (int) round( $pitcher_ml / 90 ) );
         if ( ! empty( $amounts['extra'] ) ) {
             $amounts['extra']['display'] = $this->ml_to_unit( $amounts['extra']['ml'], $unit );
         }
 
-        return array(
+        $result = array(
             'mode'       => 'pitcher',
             'pitcher_ml' => $pitcher_ml,
             'unit'       => $unit,
@@ -359,7 +442,9 @@ class MM_Calculator {
             'preset_label' => $preset['label'] ?? ucfirst( $preset_key ),
             'flavour'    => $meta,
             'suffix'     => $this->unit_suffix( $unit ),
+            'abv_overrides' => $abv_overrides,
         );
+        return $this->add_nutrition( $result, $args, $abv_overrides );
     }
 
 }
