@@ -14,6 +14,7 @@ class MM_REST {
                 'mode'       => array( 'sanitize_callback' => 'sanitize_key' ),
                 'unit'       => array( 'sanitize_callback' => 'sanitize_text_field' ),
                 'wet_rim'    => array( 'sanitize_callback' => 'rest_sanitize_boolean' ),
+                'flavour'    => array( 'sanitize_callback' => 'sanitize_key' ),
             ),
             'callback' => array( $this, 'calc' ),
         ) );
@@ -26,11 +27,16 @@ class MM_REST {
             'drinks'     => min( max( 1, (int) $request->get_param( 'drinks' ) ), $max ),
             'pitcher_ml' => min( 5000, max( 100, (float) ( $request->get_param( 'pitcher_ml' ) ?: 1000 ) ) ),
             'unit'       => $request->get_param( 'unit' ) ?: get_option( 'mm_unit', 'ml' ),
+            'flavour'    => $request->get_param( 'flavour' ) ?: 'none',
             'wet_rim'    => null === $request->get_param( 'wet_rim' ) ? true : (bool) $request->get_param( 'wet_rim' ),
         );
         $calc            = MM_Plugin::instance()->calc;
         $allowed_presets = array_keys( $calc->list_presets() );
+        $allowed_units   = array( 'ml', 'oz', 'shot', 'nip' );
         $args['preset']  = in_array( $args['preset'], $allowed_presets, true ) ? $args['preset'] : 'classic';
+        $args['unit']    = in_array( $args['unit'], $allowed_units, true ) ? $args['unit'] : get_option( 'mm_unit', 'ml' );
+        $args['flavour'] = $calc->normalise_flavour_key( $args['flavour'] );
+        $mode            = in_array( $mode, array( 'drinks', 'pitcher' ), true ) ? $mode : 'drinks';
         $data            = 'pitcher' === $mode ? $calc->pitcher( $args ) : $calc->batch( $args );
         foreach ( $data['quantities'] as &$v ) {
             if ( is_array( $v ) && isset( $v['display'] ) ) { $v['display'] = round( $v['display'], 2 ); }
