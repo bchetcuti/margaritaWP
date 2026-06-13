@@ -23,7 +23,7 @@ class MM_Settings {
         register_setting( 'mm_settings', 'mm_default_preset', array( 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field', 'default' => 'classic' ) );
         register_setting( 'mm_settings', 'mm_max_drinks', array( 'type' => 'integer', 'sanitize_callback' => 'absint', 'default' => 25 ) );
         register_setting( 'mm_settings', 'mm_show_abv', array( 'type' => 'boolean', 'sanitize_callback' => array( $this, 'sanitize_bool' ), 'default' => 1 ) );
-        register_setting( 'mm_settings', 'mm_custom_presets', array( 'type' => 'array', 'sanitize_callback' => array( $this, 'sanitize_custom_presets' ), 'default' => array() ) );
+        register_setting( 'mm_custom_presets_settings', 'mm_custom_presets', array( 'type' => 'array', 'sanitize_callback' => array( $this, 'sanitize_custom_presets' ), 'default' => array() ) );
     }
     public function sanitize_unit( $val ) {
         $allowed = array( 'ml', 'oz', 'shot', 'nip' );
@@ -126,7 +126,7 @@ class MM_Settings {
             </table>
             <h3><?php esc_html_e( 'Add preset', 'margarita-measurements' ); ?></h3>
             <form method="post" action="options.php">
-                <?php settings_fields( 'mm_settings' ); wp_nonce_field( 'mm_custom_preset_nonce', 'mm_custom_preset_nonce' ); ?>
+                <?php settings_fields( 'mm_custom_presets_settings' ); wp_nonce_field( 'mm_custom_preset_nonce', 'mm_custom_preset_nonce' ); ?>
                 <table class="form-table" role="presentation">
                     <tr><th><label for="mm_custom_label"><?php esc_html_e( 'Label', 'margarita-measurements' ); ?></label></th><td><input id="mm_custom_label" name="mm_custom_presets[new][label]" type="text" required /></td></tr>
                     <tr><th><label for="mm_custom_tequila"><?php esc_html_e( 'Tequila ml', 'margarita-measurements' ); ?></label></th><td><input id="mm_custom_tequila" name="mm_custom_presets[new][tequila_ml]" type="number" min="0" step="0.1" value="60" /></td></tr>
