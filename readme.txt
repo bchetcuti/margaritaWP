@@ -1,9 +1,9 @@
 === Margarita Measurements ===
 Contributors: Bryan Chetcuti
 Requires at least: 5.8
-Tested up to: 6.6
-Stable tag: 2.2.0
-Requires PHP: 7.4
+Tested up to: 7.0
+Stable tag: 2.3.0
+Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -36,6 +36,17 @@ Yes, in **Settings → Margarita Measurements**.
 Yes. The shortcode works anywhere.
 
 == Changelog ==
+= 2.3.0 =
+- WordPress 7.0 compatibility confirmed; bumped Tested up to.
+- Fixed MM_VERSION constant mismatch (was 2.1.0, now 2.3.0).
+- Removed deprecated load_plugin_textdomain call (auto-loaded since WP 4.6).
+- Security: REST and AJAX now clamp drinks to mm_max_drinks and validate preset against allowlist.
+- Security: ABV calculation now uses per-preset triple_abv value (default 0.40).
+- Feature: Custom Preset Builder — create, save, and delete named ratio presets from the Settings page.
+- Feature: Pitcher Mode — calculate total quantities for a given pitcher volume instead of per-drink.
+- Feature: Salt Rim Estimator — displays estimated salt grams and teaspoons per batch (wet/dry toggle).
+- Feature: Print Recipe Card — styled A5 print card injected at print time, no page theme bleed.
+
 = 2.2.0 =
 - Presets, units, ABV, REST, AJAX, block, settings, uninstall.
 - Minor UI polish and docs update.

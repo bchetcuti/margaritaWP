@@ -14,6 +14,7 @@ class MM_Plugin {
     }
     public function enqueue_frontend() {
         wp_register_style( 'mm-frontend', MM_PLUGIN_URL . 'assets/css/frontend.css', array(), MM_VERSION );
+        wp_register_style( 'mm-print', MM_PLUGIN_URL . 'assets/css/print.css', array(), MM_VERSION, 'print' );
         wp_register_script( 'mm-frontend', MM_PLUGIN_URL . 'assets/js/frontend.js', array( 'jquery' ), MM_VERSION, true );
         wp_localize_script( 'mm-frontend', 'MM_Ajax', array(
             'ajax_url' => admin_url( 'admin-ajax.php' ),
@@ -22,6 +23,7 @@ class MM_Plugin {
     }
     public function render_shortcode( $atts = array() ) {
         wp_enqueue_style( 'mm-frontend' );
+        wp_enqueue_style( 'mm-print' );
         wp_enqueue_script( 'mm-frontend' );
         $default_unit   = get_option( 'mm_unit', 'ml' );
         $default_preset = get_option( 'mm_default_preset', 'classic' );
@@ -36,7 +38,7 @@ class MM_Plugin {
                     <select id="mm_preset" name="preset">
                         <?php foreach ( $presets as $key => $p ): ?>
                             <option value="<?php echo esc_attr( $key ); ?>" <?php selected( $key, $default_preset ); ?>>
-                                <?php echo esc_html( ucfirst( $key ) ); ?>
+                                <?php echo esc_html( $p['label'] ?? ucfirst( $key ) ); ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
@@ -44,6 +46,23 @@ class MM_Plugin {
                 <div class="mm-row">
                     <label for="mm_drinks"><?php echo esc_html__( 'Drinks', 'margarita-measurements' ); ?></label>
                     <input id="mm_drinks" name="drinks" type="number" min="1" max="<?php echo esc_attr( $max_drinks ); ?>" value="1" />
+                </div>
+                <div class="mm-row">
+                    <label for="mm_mode"><?php esc_html_e( 'Mode', 'margarita-measurements' ); ?></label>
+                    <select id="mm_mode" name="mode">
+                        <option value="drinks"><?php esc_html_e( 'Per drink count', 'margarita-measurements' ); ?></option>
+                        <option value="pitcher"><?php esc_html_e( 'Pitcher (total ml)', 'margarita-measurements' ); ?></option>
+                    </select>
+                </div>
+                <div class="mm-row mm-pitcher-row" style="display:none;">
+                    <label for="mm_pitcher_ml"><?php esc_html_e( 'Pitcher size (ml)', 'margarita-measurements' ); ?></label>
+                    <input id="mm_pitcher_ml" name="pitcher_ml" type="number" min="100" max="5000" step="50" value="1000" />
+                </div>
+                <div class="mm-row">
+                    <label>
+                        <input type="checkbox" name="wet_rim" value="1" checked />
+                        <?php esc_html_e( 'Wet rim (more salt)', 'margarita-measurements' ); ?>
+                    </label>
                 </div>
                 <fieldset class="mm-fieldset">
                     <legend><?php echo esc_html__( 'Units', 'margarita-measurements' ); ?></legend>
