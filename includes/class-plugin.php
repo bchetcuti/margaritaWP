@@ -31,18 +31,12 @@ class MM_Plugin {
         return in_array( strtolower( (string) $value ), array( '1', 'true', 'yes', 'on' ), true );
     }
 
-    public function render_shortcode( $atts = array() ) {
-        wp_enqueue_style( 'mm-frontend' );
-        wp_enqueue_style( 'mm-print' );
-        wp_enqueue_script( 'mm-frontend' );
-
+    public function sanitize_render_atts( $atts = array() ) {
         $default_unit   = get_option( 'mm_unit', 'ml' );
         $default_preset = get_option( 'mm_default_preset', 'classic' );
         $max_drinks     = (int) get_option( 'mm_max_drinks', 25 );
         $admin_show_abv = (bool) get_option( 'mm_show_abv', 1 );
-        $default_standard_drink_region = $this->calc->normalise_standard_drink_region( get_option( 'mm_standard_drink_region', 'AU' ) );
         $presets        = $this->calc->list_presets();
-        $flavours       = $this->calc->list_flavours();
         $allowed_units  = array( 'ml', 'oz', 'shot', 'nip' );
         $allowed_modes  = array( 'drinks', 'pitcher', 'party' );
 
@@ -67,10 +61,50 @@ class MM_Plugin {
         $mode   = sanitize_key( $atts['mode'] );
         $mode   = in_array( $mode, $allowed_modes, true ) ? $mode : 'drinks';
         $drinks = min( max( 1, absint( $atts['drinks'] ) ), max( 1, $max_drinks ) );
-        $show_abv = $this->sanitize_bool( $atts['show_abv'], $admin_show_abv );
-        $flavour  = $this->calc->normalise_flavour_key( $atts['flavour'] );
-        $title    = sanitize_text_field( $atts['title'] );
-        $title    = '' === $title ? __( 'Margarita Measurements', 'margarita-measurements' ) : $title;
+        $title  = sanitize_text_field( $atts['title'] );
+
+        return array(
+            'preset'   => $preset,
+            'unit'     => $unit,
+            'flavour'  => $this->calc->normalise_flavour_key( $atts['flavour'] ),
+            'drinks'   => $drinks,
+            'show_abv' => $this->sanitize_bool( $atts['show_abv'], $admin_show_abv ),
+            'mode'     => $mode,
+            'title'    => '' === $title ? __( 'Margarita Measurements', 'margarita-measurements' ) : $title,
+        );
+    }
+
+    protected function block_attributes_to_shortcode_atts( $attributes ) {
+        $atts = array();
+        foreach ( array( 'preset', 'unit', 'flavour', 'mode', 'title' ) as $key ) {
+            if ( isset( $attributes[ $key ] ) ) {
+                $atts[ $key ] = $attributes[ $key ];
+            }
+        }
+        if ( array_key_exists( 'showAbv', $attributes ) ) {
+            $atts['show_abv'] = $attributes['showAbv'] ? 'true' : 'false';
+        }
+        return $atts;
+    }
+
+    public function render_shortcode( $atts = array() ) {
+        wp_enqueue_style( 'mm-frontend' );
+        wp_enqueue_style( 'mm-print' );
+        wp_enqueue_script( 'mm-frontend' );
+
+        $max_drinks = (int) get_option( 'mm_max_drinks', 25 );
+        $default_standard_drink_region = $this->calc->normalise_standard_drink_region( get_option( 'mm_standard_drink_region', 'AU' ) );
+        $presets   = $this->calc->list_presets();
+        $flavours  = $this->calc->list_flavours();
+        $atts      = $this->sanitize_render_atts( $atts );
+
+        $preset   = $atts['preset'];
+        $unit     = $atts['unit'];
+        $mode     = $atts['mode'];
+        $drinks   = $atts['drinks'];
+        $show_abv = $atts['show_abv'];
+        $flavour  = $atts['flavour'];
+        $title    = $atts['title'];
         $instance = wp_unique_id( 'mm-' );
         ob_start(); ?>
         <div class="mm-wrap">
@@ -139,7 +173,7 @@ class MM_Plugin {
     public function register_block() {
         register_block_type( __DIR__ . '/../block', array(
             'render_callback' => function( $attributes, $content ) {
-                return $this->render_shortcode();
+                return $this->render_shortcode( $this->block_attributes_to_shortcode_atts( is_array( $attributes ) ? $attributes : array() ) );
             },
         ) );
     }

@@ -16,5 +16,31 @@
   "style": "file:./style.css",
   "supports": {
     "html": false
+  },
+  "attributes": {
+    "preset": {
+      "type": "string",
+      "default": "classic"
+    },
+    "unit": {
+      "type": "string",
+      "default": "ml"
+    },
+    "flavour": {
+      "type": "string",
+      "default": "none"
+    },
+    "mode": {
+      "type": "string",
+      "default": "drinks"
+    },
+    "showAbv": {
+      "type": "boolean",
+      "default": true
+    },
+    "title": {
+      "type": "string",
+      "default": "Margarita Measurements"
+    }
   }
 }
