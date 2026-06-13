@@ -1,18 +1,49 @@
 name: CI
+
 on:
   push:
     branches: [ main ]
+
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
+
       - name: PHP version
         run: php -v
+
+      - name: Validate plugin header
+        run: |
+          php -r "
+            \$content = file_get_contents('margarita-measurements.php');
+            if (!preg_match('/Plugin Name:\s*.+/i', \$content)) {
+              fwrite(STDERR, 'ERROR: Plugin Name header missing.' . PHP_EOL);
+              exit(1);
+            }
+            echo 'Plugin header OK' . PHP_EOL;
+          "
+
+      - name: Stage plugin files
+        run: |
+          mkdir -p dist/margarita-measurements
+          rsync -av --exclude='dist' \
+                    --exclude='.git' \
+                    --exclude='.github' \
+                    --exclude='.editorconfig' \
+                    --exclude='.phpcs.xml.dist' \
+                    --exclude='assets-wporg' \
+                    --exclude='tests' \
+                    --exclude='CONTRIBUTING.md' \
+                    --exclude='*.zip' \
+                    . dist/margarita-measurements/
+
       - name: Zip plugin
         run: |
-          mkdir -p dist
-          zip -r dist/margarita-measurements.zip . -x "dist/*" ".git/*"
+          cd dist
+          zip -r margarita-measurements.zip margarita-measurements/
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
