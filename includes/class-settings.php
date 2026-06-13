@@ -1,4 +1,8 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 class MM_Settings {
     private static $instance = null;
     public static function instance() {

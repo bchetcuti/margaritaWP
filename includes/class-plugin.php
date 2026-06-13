@@ -1,4 +1,8 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 class MM_Plugin {
     private static $instance = null;
     public $calc;

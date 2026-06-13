@@ -1,5 +1,5 @@
 === Margarita Measurements ===
-Contributors: Bryan Chetcuti
+Contributors: TODO-wordpress-org-username
 Tags: margarita, cocktail, calculator, bar, drinks
 Requires at least: 5.8
 Tested up to: 7.0
@@ -62,12 +62,6 @@ Recipe calculations run in WordPress and the browser through the plugin's local 
 2. Result card for a scaled margarita batch.
 3. Flavour selector with margarita variants.
 4. Pitcher or batch output.
-5. Print recipe card output.
-6. Custom preset builder in settings.
-7. Gutenberg block editor view.
-8. Compact `[margarita_widget]` inside a recipe post.
-9. Nutrition and standard drinks panel expanded.
-10. Mobile responsive calculator view.
 
 == Frequently Asked Questions ==
 = Does it work without Gutenberg? =
