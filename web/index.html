@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="MargaritaWP is the home of Margarita Measurements: an open-source WordPress plugin for calculating, scaling and embedding margarita recipes." />
+  <meta property="og:title" content="MargaritaWP - Margarita Measurements for WordPress" />
+  <meta property="og:description" content="Perfect margarita ratios, every time - inside WordPress." />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="theme-color" content="#65a30d" />
+  <title>MargaritaWP - Perfect margarita ratios inside WordPress</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍋</text></svg>" />
+  <style>
+    /* ── Design Tokens ─────────────────────────────────────────── */
+    :root {
+      --color-cream:       #fffdf7;
+      --color-cream-dark:  #fbf8f0;
+      --color-salt:        #f5f0e8;
+      --color-warm-gray:   #6b6560;
+      --color-warm-dark:   #3d3833;
+      --color-warm-darker: #2a2520;
+      --color-lime:        #65a30d;
+      --color-lime-light:  #84cc16;
+      --color-lime-pale:   #ecfccb;
+      --color-lime-wash:   #f7fee7;
+      --color-citrus:      #eab308;
+      --color-citrus-pale: #fef9c3;
+      --color-teal:        #0d9488;
+      --color-white:       #ffffff;
+
+      --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --radius-sm: 0.375rem;
+      --radius-md: 0.5rem;
+      --radius-lg: 0.5rem;
+      --radius-xl: 0.75rem;
+      --radius-2xl: 1rem;
+      --radius-full: 9999px;
+
+      --shadow-sm: 0 1px 3px 0 rgba(0,0,0,.10), 0 1px 2px -1px rgba(0,0,0,.10);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,.10), 0 2px 4px -2px rgba(0,0,0,.10);
+      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.10), 0 4px 6px -4px rgba(0,0,0,.10);
+      --shadow-xl: 0 20px 25px -5px rgba(0,0,0,.10), 0 8px 10px -6px rgba(0,0,0,.10);
+    }
+
+    /* ── Reset & Base ──────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--color-cream);
+      color: var(--color-warm-darker);
+      font-size: 2rem;
+      line-height: 1.6;
+    }
+    a { color: inherit; text-decoration: none; }
+    img, svg { display: block; max-width: 100%; }
+    button { cursor: pointer; font: inherit; border: none; background: none; }
+    :focus-visible {
+      outline: 3px solid rgba(101, 163, 13, .35);
+      outline-offset: 3px;
+      border-radius: var(--radius-sm);
+    }
+    .skip-link {
+      position: absolute;
+      left: 1rem;
+      top: -4rem;
+      z-index: 100;
+      background: var(--color-warm-darker);
+      color: var(--color-white);
+      padding: .625rem .875rem;
+      border-radius: var(--radius-md);
+      transition: top .15s;
+    }
+    .skip-link:focus { top: 1rem; }
+
+    /* ── Layout Helpers ────────────────────────────────────────── */
+    .container { max-width: 1200px; margin-inline: auto; padding-inline: 1.25rem; }
+    .container-narrow { max-width: 960px; margin-inline: auto; padding-inline: 1.25rem; }
+
+    /* ── Nav ───────────────────────────────────────────────────── */
+    .nav {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(255,253,247,0.9);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--color-salt);
+    }
+    .nav-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      padding-block: 0.875rem;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 0.5rem;
+      font-weight: 700; font-size: 1rem; color: var(--color-warm-darker);
+    }
+    .nav-logo-emoji { font-size: 1.5rem; }
+    .nav-links { display: flex; align-items: center; gap: 1.5rem; }
+    .nav-status {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--color-teal);
+      background: rgba(13, 148, 136, .08);
+      border: 1px solid rgba(13, 148, 136, .16);
+      border-radius: var(--radius-full);
+      padding: .35rem .7rem;
+      white-space: nowrap;
+    }
+    .nav-links a {
+      font-size: 0.875rem; font-weight: 500; color: var(--color-warm-gray);
+      transition: color .15s;
+    }
+    .nav-links a:hover { color: var(--color-lime); }
+    .nav-cta {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: var(--color-warm-darker); color: var(--color-white);
+      border-radius: var(--radius-lg); padding: 0.5rem 1rem;
+      font-size: 1.1rem; font-weight: 600;
+      transition: background .15s;
+    }
+    .nav-cta:hover { background: var(--color-warm-dark); }
+    .nav-mobile-toggle {
+      display: none;
+      padding: 0.375rem;
+      color: var(--color-warm-darker);
+    }
+    @media (max-width: 768px) {
+      .nav-inner { position: relative; }
+      .nav-links {
+        display: none;
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: calc(100% + .75rem);
+        padding: 1rem;
+        border: 1px solid var(--color-salt);
+        border-radius: var(--radius-xl);
+        background: rgba(255,253,247,.98);
+        box-shadow: var(--shadow-lg);
+        flex-direction: column;
+        align-items: stretch;
+        gap: .75rem;
+      }
+      .nav-links.is-open { display: flex; }
+      .nav-links a:not(.nav-cta) { padding: .35rem .25rem; }
+      .nav-status { align-self: flex-start; }
+      .nav-mobile-toggle { display: block; }
+    }
+
+    /* ── Badge ─────────────────────────────────────────────────── */
+    .badge {
+      display: inline-flex; align-items: center; gap: 0.375rem;
+      background: var(--color-lime-wash);
+      border: 1px solid var(--color-lime-pale);
+      color: var(--color-lime);
+      border-radius: var(--radius-full);
+      padding: 0.375rem 1rem;
+      font-size: 1rem; font-weight: 600;
+    }
+
+    /* ── Hero ──────────────────────────────────────────────────── */
+    .hero {
+      padding-block: 5rem 6rem;
+      text-align: center;
+    }
+    @media (min-width: 768px) { .hero { padding-block: 7rem 8rem; } }
+    .hero-badge { margin-bottom: 1.5rem; }
+    .hero-title {
+      font-size: clamp(2.5rem, 6vw, 4rem);
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      line-height: 1.1;
+      color: var(--color-warm-darker);
+      margin-bottom: 1.25rem;
+    }
+    .hero-title .accent { color: var(--color-lime); }
+    .hero-subtitle {
+      font-size: clamp(1rem, 2vw, 1.125rem);
+      color: var(--color-warm-gray);
+      max-width: 42rem;
+      margin-inline: auto;
+      margin-bottom: 2.5rem;
+      line-height: 1.7;
+    }
+    .hero-actions { display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 0.625rem;
+      background: var(--color-lime); color: var(--color-white);
+      border-radius: var(--radius-xl); padding: 0.875rem 1.75rem;
+      font-size: 1rem; font-weight: 600;
+      box-shadow: var(--shadow-lg), 0 0 0 0 rgba(101,163,13,.2);
+      transition: background .15s, box-shadow .15s;
+    }
+    .btn-primary:hover { background: var(--color-lime-light); }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      border: 2px solid rgba(42,37,32,.1);
+      color: var(--color-warm-darker);
+      border-radius: var(--radius-xl); padding: 0.8rem 1.75rem;
+      font-size: 1rem; font-weight: 600;
+      transition: border-color .15s, color .15s;
+    }
+    .btn-secondary:hover { border-color: var(--color-lime); color: var(--color-lime); }
+
+    /* ── Trust pills ───────────────────────────────────────────── */
+    .trust-pills {
+      display: flex; align-items: center; justify-content: center;
+      gap: 0.75rem; flex-wrap: wrap;
+      margin-top: 2rem;
+    }
+    .trust-pill {
+      display: inline-flex; align-items: center; gap: 0.375rem;
+      background: var(--color-white);
+      border: 1px solid var(--color-salt);
+      border-radius: var(--radius-full);
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem; color: var(--color-warm-dark); font-weight: 500;
+    }
+    .trust-pill .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--color-lime);
+      flex-shrink: 0;
+    }
+
+    /* ── Preview card ──────────────────────────────────────────── */
+    .preview-wrap {
+      margin-top: 3.5rem;
+      position: relative;
+    }
+    .preview-card {
+      background: var(--color-white);
+      border-radius: var(--radius-2xl);
+      box-shadow: var(--shadow-xl), 0 0 0 1px rgba(101,163,13,.08);
+      overflow: hidden;
+      max-width: 540px;
+      margin-inline: auto;
+    }
+    .preview-header {
+      background: var(--color-lime-wash);
+      border-bottom: 1px solid rgba(236,252,203,.6);
+      padding: 1rem 1.5rem;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .preview-header span { font-size: 0.75rem; color: var(--color-lime); font-weight: 600; }
+    .preview-body { padding: 1.5rem; }
+    .preview-label { font-size: 0.75rem; color: var(--color-warm-gray); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 0.5rem; }
+    .preview-selector {
+      display: flex; gap: 0.5rem; flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+    .preview-chip {
+      padding: 0.375rem 0.75rem;
+      border-radius: var(--radius-full);
+      font-size: 0.8125rem; font-weight: 500;
+      background: var(--color-salt);
+      color: var(--color-warm-dark);
+      border: 1px solid var(--color-salt);
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .preview-chip.active {
+      background: var(--color-lime);
+      color: var(--color-white);
+      border-color: var(--color-lime);
+    }
+    .preview-slider-row {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+    .preview-slider-row span { font-size: 0.875rem; color: var(--color-warm-dark); font-weight: 500; }
+    .preview-slider-row strong { font-size: 0.875rem; font-weight: 700; color: var(--color-lime); }
+    .preview-slider {
+      width: 100%; appearance: none; height: 6px;
+      border-radius: 3px;
+      background: linear-gradient(to right, var(--color-lime) 40%, var(--color-lime-pale) 40%);
+      margin-bottom: 1.25rem;
+      cursor: pointer;
+    }
+    .preview-results { margin-top: 0.75rem; }
+    .preview-result-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.625rem 0;
+      border-bottom: 1px solid var(--color-salt);
+      font-size: 0.875rem;
+    }
+    .preview-result-row:last-child { border-bottom: none; }
+    .preview-result-row .rname { color: var(--color-warm-gray); }
+    .preview-result-row .rval { font-weight: 600; color: var(--color-warm-darker); }
+    .preview-badge-row {
+      display: flex; gap: 0.375rem; flex-wrap: wrap;
+      margin-top: 0.75rem;
+    }
+    .preview-mini-badge {
+      font-size: 0.7rem; font-weight: 600;
+      padding: 0.2rem 0.5rem;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--color-lime-pale);
+      color: var(--color-lime);
+      background: var(--color-lime-wash);
+    }
+    .preview-note {
+      margin-top: 1rem;
+      font-size: 0.75rem; color: var(--color-warm-gray);
+      font-style: italic;
+      text-align: center;
+    }
+    .demo-anchor { scroll-margin-top: 6rem; }
+
+    /* ── Section shared ────────────────────────────────────────── */
+    .section { padding-block: clamp(3rem, 7vw, 5rem); }
+    .section-label {
+      font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .08em; color: var(--color-lime);
+      margin-bottom: 0.75rem;
+    }
+    .section-title {
+      font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+      font-weight: 800; letter-spacing: -0.02em;
+      line-height: 1.15; color: var(--color-warm-darker);
+      margin-bottom: 0.75rem;
+    }
+    .section-sub {
+      font-size: 1rem; color: var(--color-warm-gray);
+      max-width: 40rem; line-height: 1.7;
+      margin-bottom: 3rem;
+    }
+
+    /* ── Features ──────────────────────────────────────────────── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
+      gap: 1rem;
+    }
+    .feature-card {
+      border-radius: var(--radius-2xl);
+      border: 1px solid var(--color-salt);
+      background: rgba(255,253,247,.5);
+      padding: 1.5rem;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .feature-card:hover {
+      border-color: var(--color-lime-pale);
+      box-shadow: var(--shadow-lg), 0 0 0 0 rgba(101,163,13,.05);
+    }
+    .feature-icon {
+      width: 2.75rem; height: 2.75rem;
+      border-radius: var(--radius-xl);
+      background: var(--color-lime-wash);
+      color: var(--color-lime);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 1rem;
+      font-size: 1.125rem;
+      transition: background .2s, color .2s;
+    }
+    .feature-card:hover .feature-icon {
+      background: var(--color-lime);
+      color: var(--color-white);
+    }
+    .feature-title { font-size: 1rem; font-weight: 700; color: var(--color-warm-darker); margin-bottom: 0.375rem; }
+    .feature-desc { font-size: 0.875rem; color: var(--color-warm-gray); line-height: 1.6; }
+    .feature-tag {
+      margin-top: 0.75rem;
+      display: inline-block;
+      font-size: 0.7rem; font-weight: 600;
+      padding: 0.1875rem 0.625rem;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--color-lime-pale);
+      color: var(--color-lime);
+      background: var(--color-lime-wash);
+    }
+
+    /* ── How it works ──────────────────────────────────────────── */
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+      gap: 2rem;
+      margin-top: 0.5rem;
+    }
+    .step { text-align: center; }
+    .step-num {
+      width: 3rem; height: 3rem;
+      border-radius: var(--radius-full);
+      background: var(--color-teal);
+      color: var(--color-white);
+      display: flex; align-items: center; justify-content: center;
+      margin-inline: auto; margin-bottom: 1rem;
+      font-weight: 700; font-size: 0.875rem;
+    }
+    .step-title { font-size: 1rem; font-weight: 700; color: var(--color-warm-darker); margin-bottom: 0.5rem; }
+    .step-desc { font-size: 0.875rem; color: var(--color-warm-gray); line-height: 1.6; max-width: 24ch; margin-inline: auto; }
+
+    /* ── Shortcodes ────────────────────────────────────────────── */
+    .shortcode-section { background: var(--color-warm-darker); border-radius: var(--radius-2xl); padding: 2.5rem; }
+    .shortcode-section .section-title, .shortcode-section .section-label { color: var(--color-white); }
+    .shortcode-section .section-label { color: rgba(255,255,255,.5); }
+    .shortcode-section .section-sub { color: rgba(255,255,255,.65); }
+    .shortcode-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: 1rem; }
+    .shortcode-card {
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+    }
+    .shortcode-card-head {
+      background: rgba(255,255,255,.04);
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      padding: 0.75rem 1rem;
+      font-size: 0.75rem; font-weight: 600;
+      color: rgba(255,255,255,.5);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .shortcode-card-head .sc-type {
+      font-size: 0.7rem; font-weight: 600;
+      padding: 0.125rem 0.5rem;
+      border-radius: var(--radius-full);
+      background: rgba(101,163,13,.2);
+      color: var(--color-lime-light);
+    }
+    .shortcode-card-body { padding: 1rem; font-family: 'Courier New', monospace; font-size: 0.8125rem; color: var(--color-lime-light); }
+
+    /* ── Use cases ─────────────────────────────────────────────── */
+    .usecases-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr)); gap: 1.5rem; }
+    .usecase-card {
+      border-radius: var(--radius-2xl);
+      border: 1px solid var(--color-salt);
+      padding: 1.5rem 1.75rem;
+      background: rgba(255,253,247,.3);
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .usecase-card:hover {
+      border-color: var(--color-lime-pale);
+      box-shadow: var(--shadow-md);
+    }
+    .usecase-title { font-size: 1rem; font-weight: 700; color: var(--color-warm-darker); margin-bottom: 0.5rem; }
+    .usecase-desc { font-size: 0.875rem; color: var(--color-warm-gray); line-height: 1.6; }
+
+    /* ── Roadmap ───────────────────────────────────────────────── */
+    .roadmap-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr)); gap: 0.875rem; }
+    .roadmap-item {
+      display: flex; align-items: flex-start; gap: 0.75rem;
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--color-salt);
+      padding: 1rem 1.25rem;
+      background: rgba(255,253,247,.6);
+    }
+    .roadmap-item .ri-icon {
+      width: 2rem; height: 2rem;
+      border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; font-size: 0.75rem; font-weight: 700;
+    }
+    .ri-done { background: var(--color-lime-wash); }
+    .ri-done .ri-icon { background: var(--color-lime-wash); color: var(--color-lime); }
+    .ri-progress { opacity: .9; }
+    .ri-progress .ri-icon { background: rgba(13,148,136,.10); color: var(--color-teal); }
+    .ri-soon { opacity: .75; }
+    .ri-soon .ri-icon { background: var(--color-citrus-pale); color: var(--color-citrus); }
+    .roadmap-item .ri-text { font-size: 0.875rem; font-weight: 500; color: var(--color-warm-dark); line-height: 1.4; }
+    .roadmap-item .ri-badge {
+      margin-top: 0.25rem;
+      display: inline-block;
+      font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em;
+      padding: 0.125rem 0.5rem;
+      border-radius: var(--radius-full);
+    }
+    .ri-done .ri-badge { background: var(--color-lime-wash); color: var(--color-lime); border: 1px solid var(--color-lime-pale); }
+    .ri-progress .ri-badge { background: rgba(13,148,136,.08); color: var(--color-teal); border: 1px solid rgba(13,148,136,.18); }
+    .ri-soon .ri-badge { background: var(--color-citrus-pale); color: var(--color-citrus); border: 1px solid rgba(234,179,8,.3); }
+
+    /* ── CTA banner ────────────────────────────────────────────── */
+    .cta-banner {
+      background: var(--color-warm-darker);
+      border-radius: var(--radius-2xl);
+      padding: clamp(2.5rem, 5vw, 4rem);
+      text-align: center;
+    }
+    .cta-banner h2 {
+      font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+      font-weight: 800; letter-spacing: -0.02em;
+      color: var(--color-white); margin-bottom: 0.75rem;
+    }
+    .cta-banner p {
+      font-size: 1rem; color: rgba(255,255,255,.65);
+      max-width: 36rem; margin-inline: auto; margin-bottom: 2rem; line-height: 1.7;
+    }
+    .cta-banner-actions { display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap; }
+    .btn-cta-ghost {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      border: 2px solid rgba(255,255,255,.2);
+      color: var(--color-white);
+      border-radius: var(--radius-xl); padding: 0.8rem 1.75rem;
+      font-size: 1rem; font-weight: 600;
+      transition: border-color .15s;
+    }
+    .btn-cta-ghost:hover { border-color: rgba(255,255,255,.4); }
+
+    /* ── Footer ────────────────────────────────────────────────── */
+    .footer {
+      padding-block: 2rem;
+      border-top: 1px solid var(--color-salt);
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+      gap: 1rem;
+      font-size: 0.75rem; color: rgba(107,101,96,.6);
+    }
+    .footer a { color: rgba(107,101,96,.6); }
+    .footer a:hover { color: var(--color-lime); }
+    .footer-logo { display: flex; align-items: center; gap: 0.375rem; font-weight: 700; font-size: 0.875rem; color: var(--color-warm-darker); }
+  </style>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<!-- ── Navigation ───────────────────────────────────────────────── -->
+<nav class="nav">
+  <div class="container">
+    <div class="nav-inner">
+      <a href="#top" class="nav-logo" aria-label="MargaritaWP home">
+        <span class="nav-logo-emoji">🍋</span>
+        <span>MargaritaWP</span>
+      </a>
+      <div class="nav-links" id="site-nav-links">
+        <a href="#features">Features</a>
+        <a href="#demo">Demo</a>
+        <a href="#how-it-works">How it works</a>
+        <a href="#use-cases">Use cases</a>
+        <a href="#roadmap">Roadmap</a>
+        <span class="nav-status">WordPress.org coming soon</span>
+        <a href="https://github.com/bchetcuti/margaritaWP" target="_blank" rel="noopener noreferrer" class="nav-cta">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+          Download from GitHub
+        </a>
+      </div>
+      <button class="nav-mobile-toggle" type="button" aria-label="Toggle menu" aria-expanded="false" aria-controls="site-nav-links">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Hero ─────────────────────────────────────────────────────── -->
+<main id="main">
+<section class="hero" id="top">
+  <div class="container-narrow" style="text-align:center">
+    <div class="hero-badge">
+      <span class="badge">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        Margarita Measurements for WordPress
+      </span>
+    </div>
+    <h1 class="hero-title">
+      Perfect margarita ratios,<br>
+      <span class="accent">inside WordPress.</span>
+    </h1>
+    <p class="hero-subtitle">
+      MargaritaWP is the home of Margarita Measurements - an open-source plugin that helps you calculate,
+      scale and embed margarita recipes with accurate ratios, flexible units and WordPress-native shortcodes and blocks.
+    </p>
+    <div class="hero-actions">
+      <a href="https://github.com/bchetcuti/margaritaWP" target="_blank" rel="noopener noreferrer" class="btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+        Download from GitHub
+      </a>
+      <a href="#demo" class="btn-secondary">
+        View demo
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+    <div class="trust-pills">
+      <span class="trust-pill"><span class="dot"></span> Open source</span>
+      <span class="trust-pill"><span class="dot"></span> No tracking</span>
+      <span class="trust-pill"><span class="dot"></span> No third-party services</span>
+      <span class="trust-pill"><span class="dot"></span> WordPress-native</span>
+      <span class="trust-pill"><span class="dot"></span> WordPress.org submission next</span>
+    </div>
+
+    <!-- Mock calculator preview -->
+    <div class="preview-wrap demo-anchor" id="demo">
+      <div class="preview-card">
+        <div class="preview-header">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--color-lime)"><path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/></svg>
+          <span>Margarita Measurements - demo preview</span>
+        </div>
+        <div class="preview-body">
+          <div class="preview-label">Preset / flavour preview</div>
+          <div class="preview-selector">
+            <span class="preview-chip active">Classic</span>
+            <span class="preview-chip">Spicy</span>
+            <span class="preview-chip">Mango</span>
+            <span class="preview-chip">Watermelon</span>
+            <span class="preview-chip">Virgin</span>
+          </div>
+          <div class="preview-slider-row">
+            <span>Drinks to make</span>
+            <strong>4 drinks</strong>
+          </div>
+          <input class="preview-slider" type="range" min="1" max="20" value="4" aria-label="Number of drinks" />
+          <div class="preview-results">
+            <div class="preview-result-row"><span class="rname">Tequila</span><span class="rval">180 ml</span></div>
+            <div class="preview-result-row"><span class="rname">Citrus juice</span><span class="rval">120 ml</span></div>
+            <div class="preview-result-row"><span class="rname">Triple sec</span><span class="rval">60 ml</span></div>
+            <div class="preview-result-row"><span class="rname">Salt rim estimate</span><span class="rval">~6g / 1 tsp</span></div>
+            <div class="preview-result-row"><span class="rname">Estimated ABV</span><span class="rval">~26.7%</span></div>
+            <div class="preview-result-row"><span class="rname">Standard drinks (AU)</span><span class="rval">7.6 std</span></div>
+          </div>
+          <div class="preview-badge-row">
+            <span class="preview-mini-badge">ml / oz / shots / nips</span>
+            <span class="preview-mini-badge">AU · UK · US units</span>
+            <span class="preview-mini-badge">ABV aware</span>
+          </div>
+          <p class="preview-note">Visual mockup - install Margarita Measurements on your WordPress site for the real calculator experience.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Features ─────────────────────────────────────────────────── -->
+<section class="section" id="features" style="background: var(--color-cream-dark);">
+  <div class="container">
+    <div class="section-label">Why MargaritaWP</div>
+    <h2 class="section-title">Everything you need for margarita maths.</h2>
+    <p class="section-sub">A focused set of tools for calculating, customising and embedding margarita recipes on WordPress.</p>
+    <div class="features-grid">
+
+      <div class="feature-card">
+        <div class="feature-icon">⚖️</div>
+        <div class="feature-title">Ratio-first recipe scaling</div>
+        <div class="feature-desc">Select a built-in preset or define your own ratio, then scale by drink count, pitcher size or party planning needs.</div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">📐</div>
+        <div class="feature-title">Flexible units</div>
+        <div class="feature-desc">Work in ml, oz, shots or nips. MargaritaWP keeps the quantities consistent across serving sizes.</div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🍓</div>
+        <div class="feature-title">Flavour variations</div>
+        <div class="feature-desc">Add spicy, mango, watermelon, strawberry, coconut or virgin variations without rebuilding the whole recipe.</div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">📦</div>
+        <div class="feature-title">Compact widget mode</div>
+        <div class="feature-desc">Use the full calculator on landing pages, or embed a smaller widget inside individual recipe posts.</div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🔒</div>
+        <div class="feature-title">No third-party services</div>
+        <div class="feature-desc">Calculations run inside your WordPress site with local AJAX/REST handlers. No hosted calculator service required.</div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🧪</div>
+        <div class="feature-title">ABV and standard drink estimates</div>
+        <div class="feature-desc">Estimate ABV, alcohol grams and standard drinks using AU, UK or US definitions for recipe planning.</div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">⚙️</div>
+        <div class="feature-title">WordPress settings screen</div>
+        <div class="feature-desc">Choose default units, presets, ABV display and custom recipe ratios from the WordPress settings screen.</div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🔓</div>
+        <div class="feature-title">Open source</div>
+        <div class="feature-desc">Inspect the code, fork the plugin or adapt it for your own WordPress recipe workflow.</div>
+        <span class="feature-tag">GitHub</span>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── How it works ──────────────────────────────────────────────── -->
+<section class="section" id="how-it-works">
+  <div class="container-narrow" style="text-align:center">
+    <div class="section-label">How it works</div>
+    <h2 class="section-title">From install to embedded calculator.</h2>
+    <p class="section-sub" style="margin-inline:auto">Add a full calculator with a shortcode, use the Gutenberg block, or place a compact widget inside a recipe post.</p>
+    <div class="steps-grid">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-title">Install the plugin</div>
+        <div class="step-desc">Download MargaritaWP from GitHub and activate it on your WordPress site.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-title">Configure defaults</div>
+        <div class="step-desc">Set default units, presets, ABV display and custom ratios in the WordPress settings screen.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-title">Embed anywhere</div>
+        <div class="step-desc">Drop a shortcode into any post or page. Give readers a calculator they can actually use.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Shortcodes ────────────────────────────────────────────────── -->
+<section class="section" style="background: var(--color-cream-dark);">
+  <div class="container">
+    <div class="shortcode-section">
+      <div class="section-label" style="color:rgba(255,255,255,.45)">Simple to embed</div>
+      <h2 class="section-title" style="color:var(--color-white)">Built for WordPress.</h2>
+      <p class="section-sub" style="color:rgba(255,255,255,.6); margin-bottom:2rem">Drop these shortcodes into any WordPress post or page. Full documentation is available in the GitHub repository.</p>
+      <div class="shortcode-grid">
+        <div class="shortcode-card">
+          <div class="shortcode-card-head">
+            <span>Basic shortcode</span>
+            <span class="sc-type">Page / Post</span>
+          </div>
+          <div class="shortcode-card-body">[margarita_measurements]</div>
+        </div>
+        <div class="shortcode-card">
+          <div class="shortcode-card-head">
+            <span>Preset example</span>
+            <span class="sc-type">Page / Post</span>
+          </div>
+          <div class="shortcode-card-body">[margarita_measurements<br>&nbsp;&nbsp;preset="tommys"<br>&nbsp;&nbsp;drinks="4"<br>&nbsp;&nbsp;unit="ml"]</div>
+        </div>
+        <div class="shortcode-card">
+          <div class="shortcode-card-head">
+            <span>Compact widget</span>
+            <span class="sc-type">Recipe Post</span>
+          </div>
+          <div class="shortcode-card-body">[margarita_widget<br>&nbsp;&nbsp;preset="classic"<br>&nbsp;&nbsp;drinks="2"<br>&nbsp;&nbsp;align="right"]</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Use cases ─────────────────────────────────────────────────── -->
+<section class="section" id="use-cases">
+  <div class="container">
+    <div class="section-label">Use cases</div>
+    <h2 class="section-title">Who it's for</h2>
+    <p class="section-sub">Turn static cocktail recipes into interactive recipe tools.</p>
+    <div class="usecases-grid">
+      <div class="usecase-card">
+        <div class="usecase-title">🍹 Cocktail bloggers</div>
+        <div class="usecase-desc">Give readers a calculator they can actually use. Let them scale a recipe from one drink to a batch without leaving the page.</div>
+      </div>
+      <div class="usecase-card">
+        <div class="usecase-title">🍸 Bars and venues</div>
+        <div class="usecase-desc">Add practical recipe calculators to event pages, menu pages or training content.</div>
+      </div>
+      <div class="usecase-card">
+        <div class="usecase-title">🎓 Hospitality schools</div>
+        <div class="usecase-desc">Help students understand ratios, units, batch scaling and alcohol estimates in a WordPress-based learning site.</div>
+      </div>
+      <div class="usecase-card">
+        <div class="usecase-title">📰 Recipe and lifestyle sites</div>
+        <div class="usecase-desc">Use a shortcode, Gutenberg block, AJAX form and REST endpoints without relying on a third-party hosted calculator.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Roadmap ───────────────────────────────────────────────────── -->
+<section class="section" id="roadmap" style="background: var(--color-cream-dark);">
+  <div class="container">
+    <div class="section-label">Where we are and what's next</div>
+    <h2 class="section-title">Roadmap</h2>
+    <p class="section-sub">Open source. WordPress-native. No tracking. No third-party calculation service.</p>
+    <div class="roadmap-grid">
+
+      <div class="roadmap-item ri-done">
+        <div class="ri-icon">✓</div>
+        <div>
+          <div class="ri-text">Gutenberg block support</div>
+          <span class="ri-badge">Done</span>
+        </div>
+      </div>
+      <div class="roadmap-item ri-done">
+        <div class="ri-icon">✓</div>
+        <div>
+          <div class="ri-text">Compact widget shortcode</div>
+          <span class="ri-badge">Done</span>
+        </div>
+      </div>
+      <div class="roadmap-item ri-done">
+        <div class="ri-icon">✓</div>
+        <div>
+          <div class="ri-text">AJAX calculation flow</div>
+          <span class="ri-badge">Done</span>
+        </div>
+      </div>
+      <div class="roadmap-item ri-done">
+        <div class="ri-icon">✓</div>
+        <div>
+          <div class="ri-text">Custom preset builder</div>
+          <span class="ri-badge">Done</span>
+        </div>
+      </div>
+      <div class="roadmap-item ri-done">
+        <div class="ri-icon">✓</div>
+        <div>
+          <div class="ri-text">No third-party calculation service</div>
+          <span class="ri-badge">Done</span>
+        </div>
+      </div>
+      <div class="roadmap-item ri-done">
+        <div class="ri-icon">✓</div>
+        <div>
+          <div class="ri-text">AU, UK and US standard-drink region support</div>
+          <span class="ri-badge">Done</span>
+        </div>
+      </div>
+      <div class="roadmap-item ri-done">
+        <div class="ri-icon">✓</div>
+        <div>
+          <div class="ri-text">Tequila and triple sec ABV customisation</div>
+          <span class="ri-badge">Done</span>
+        </div>
+      </div>
+      <div class="roadmap-item ri-done">
+        <div class="ri-icon">✓</div>
+        <div>
+          <div class="ri-text">Nutrition and standard drinks estimator</div>
+          <span class="ri-badge">Done</span>
+        </div>
+      </div>
+      <div class="roadmap-item ri-done">
+        <div class="ri-icon">✓</div>
+        <div>
+          <div class="ri-text">Compact recipe-post widget</div>
+          <span class="ri-badge">Done</span>
+        </div>
+      </div>
+      <div class="roadmap-item ri-progress">
+        <div class="ri-icon">•</div>
+        <div>
+          <div class="ri-text">Public landing page and demo preview</div>
+          <span class="ri-badge">In progress</span>
+        </div>
+      </div>
+      <div class="roadmap-item ri-soon">
+        <div class="ri-icon">→</div>
+        <div>
+          <div class="ri-text">WordPress.org plugin directory submission</div>
+          <span class="ri-badge">Coming soon</span>
+        </div>
+      </div>
+      <div class="roadmap-item ri-soon">
+        <div class="ri-icon">→</div>
+        <div>
+          <div class="ri-text">Screenshots, usage examples &amp; extended developer docs</div>
+          <span class="ri-badge">Coming soon</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA ───────────────────────────────────────────────────────── -->
+<section class="section">
+  <div class="container">
+    <div class="cta-banner">
+      <h2>Ready to make margarita maths less annoying?</h2>
+      <p>MargaritaWP is open source and built for WordPress. Download from GitHub now, with WordPress.org submission planned next.</p>
+      <div class="cta-banner-actions">
+        <a href="https://github.com/bchetcuti/margaritaWP" target="_blank" rel="noopener noreferrer" class="btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+          Download from GitHub
+        </a>
+        <a href="https://github.com/bchetcuti/margaritaWP" target="_blank" rel="noopener noreferrer" class="btn-cta-ghost">
+          Read the docs
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17l9.2-9.2M17 17V7.8H7.8"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ── Footer ────────────────────────────────────────────────────── -->
+<footer class="section" style="padding-block: 1.5rem 2rem;">
+  <div class="container">
+    <div class="footer">
+      <div class="footer-logo">
+        <span>🍋</span>
+        <span>MargaritaWP</span>
+      </div>
+      <span>Home of Margarita Measurements - a plugin for one job: better margarita measurements.</span>
+      <div style="display:flex; gap:1rem; flex-wrap:wrap">
+        <a href="https://github.com/bchetcuti/margaritaWP" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="https://github.com/bchetcuti/margaritaWP#readme" target="_blank" rel="noopener noreferrer">Documentation</a>
+        <a href="https://github.com/bchetcuti/margaritaWP/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Mobile navigation
+  const navToggle = document.querySelector('.nav-mobile-toggle');
+  const navLinks = document.querySelector('#site-nav-links');
+
+  if (navToggle && navLinks) {
+    navToggle.addEventListener('click', () => {
+      const isOpen = navLinks.classList.toggle('is-open');
+      navToggle.setAttribute('aria-expanded', String(isOpen));
+    });
+
+    navLinks.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        navLinks.classList.remove('is-open');
+        navToggle.setAttribute('aria-expanded', 'false');
+      });
+    });
+
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape') {
+        navLinks.classList.remove('is-open');
+        navToggle.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+
+  // Live slider demo. Values mirror the built-in Classic preset at a high level.
+  const slider = document.querySelector('.preview-slider');
+  const drinkCount = document.querySelector('.preview-slider-row strong');
+  const results = document.querySelectorAll('.preview-result-row .rval');
+
+  const BASE = {
+    tequila: 45,
+    citrus: 30,
+    triple: 15,
+    saltGrams: 1.5,
+    abv: 26.7,
+    auStandardDrinks: 1.9
+  };
+
+  function update(n) {
+    if (!slider || !drinkCount || results.length < 6) return;
+
+    drinkCount.textContent = n + (n === 1 ? ' drink' : ' drinks');
+    results[0].textContent = Math.round(BASE.tequila * n) + ' ml';
+    results[1].textContent = Math.round(BASE.citrus * n) + ' ml';
+    results[2].textContent = Math.round(BASE.triple * n) + ' ml';
+
+    const saltGrams = BASE.saltGrams * n;
+    const saltTsp = saltGrams / 6;
+    results[3].textContent = '~' + saltGrams.toFixed(saltGrams % 1 ? 1 : 0) + 'g / ' + saltTsp.toFixed(1).replace('.0', '') + ' tsp';
+    results[4].textContent = '~' + BASE.abv + '%';
+    results[5].textContent = (BASE.auStandardDrinks * n).toFixed(1) + ' std';
+
+    const percentage = (n / Number(slider.max || 20)) * 100;
+    slider.style.background = `linear-gradient(to right, var(--color-lime) ${percentage}%, var(--color-lime-pale) ${percentage}%)`;
+  }
+
+  if (slider) {
+    slider.addEventListener('input', () => update(Number(slider.value)));
+    update(Number(slider.value));
+  }
+
+  // Demo chips are visual only; the real plugin performs calculations inside WordPress.
+  document.querySelectorAll('.preview-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.preview-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>

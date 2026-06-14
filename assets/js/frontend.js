@@ -65,7 +65,7 @@
             lines.push('Estimated ABV: ' + d.abv + '%');
         }
         if (d.salt_rim) {
-            lines.push('Salt rim: ~' + d.salt_rim.grams + 'g (' + d.salt_rim.tsps + ' tsp) — ' + d.salt_rim.wet_dry + ' rim');
+            lines.push('Salt rim: ~' + d.salt_rim.grams + 'g (' + d.salt_rim.tsps + ' tsp) - ' + d.salt_rim.wet_dry + ' rim');
         }
         lines.push('Made with Margarita Measurements for WordPress');
         return lines.join('\n');
@@ -124,10 +124,10 @@
             var d = resp.data;
             $results.data('mm-result', d);
             var title = d.mode === 'party'
-                ? 'Party plan for ' + esc(d.guests) + ' guest(s) — ' + esc(d.total_margaritas) + ' margaritas'
+                ? 'Party plan for ' + esc(d.guests) + ' guest(s) - ' + esc(d.total_margaritas) + ' margaritas'
                 : (d.mode === 'pitcher'
-                    ? 'Pitcher (' + esc(d.pitcher_ml) + ' ml total) — ' + esc(d.preset_label || titleCase(d.preset))
-                    : 'Batch for ' + esc(d.drinks) + ' drink(s) — ' + esc(d.preset_label || titleCase(d.preset)));
+                    ? 'Pitcher (' + esc(d.pitcher_ml) + ' ml total) - ' + esc(d.preset_label || titleCase(d.preset))
+                    : 'Batch for ' + esc(d.drinks) + ' drink(s) - ' + esc(d.preset_label || titleCase(d.preset)));
             if (d.flavour && d.flavour.key !== 'none') {
                 title += ' · ' + esc(d.flavour.label);
             }
@@ -148,7 +148,7 @@
                 html += '<p><em>Alcohol-free:</em> no ABV estimate shown.</p>';
             }
             if (d.salt_rim) {
-                html += '<p>🧂 <strong>Salt rim:</strong> ~' + esc(d.salt_rim.grams) + 'g (' + esc(d.salt_rim.tsps) + ' tsp) — ' + esc(d.salt_rim.wet_dry) + ' rim</p>';
+                html += '<p>🧂 <strong>Salt rim:</strong> ~' + esc(d.salt_rim.grams) + 'g (' + esc(d.salt_rim.tsps) + ' tsp) - ' + esc(d.salt_rim.wet_dry) + ' rim</p>';
             }
             html += nutritionDetails(d);
             if (d.mode === 'party') {
@@ -199,7 +199,7 @@
         if (!d) { return; }
         var tableRows = ingredientRows(d).map(function(r){ return '<tr><td><strong>' + esc(r[0]) + '</strong></td><td>' + esc(r[1]) + '</td></tr>'; }).join('');
         var saltLine = d.salt_rim ? '<tr><td><strong>Salt (rim)</strong></td><td>~' + esc(d.salt_rim.grams) + 'g (' + esc(d.salt_rim.tsps) + ' tsp)</td></tr>' : '';
-        var modeLabel = d.mode === 'pitcher' ? 'Pitcher — ' + esc(d.pitcher_ml) + ' ml total' : esc(d.drinks) + ' drink(s)';
+        var modeLabel = d.mode === 'pitcher' ? 'Pitcher - ' + esc(d.pitcher_ml) + ' ml total' : esc(d.drinks) + ' drink(s)';
         var flavourLabel = d.flavour && d.flavour.key !== 'none' ? ' · ' + esc(d.flavour.label) : '';
         var html = '<div id="mm-print-frame">'
             + '<h2>🍋 Margarita Recipe</h2>'
