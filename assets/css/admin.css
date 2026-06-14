@@ -1,0 +1,13 @@
+.mm-admin-wrap { max-width: 1180px; }
+.mm-admin-wrap h1 { margin-bottom: 1rem; }
+.mm-admin-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 16px 0; }
+.mm-admin-card { background: #fff; border: 1px solid #c3c4c7; box-shadow: 0 1px 1px rgba(0,0,0,.04); padding: 18px 20px; margin: 16px 0; }
+.mm-admin-card h2 { margin-top: 0; }
+.mm-admin-card--primary { border-left: 4px solid #2271b1; }
+.mm-admin-code { display: block; box-sizing: border-box; width: 100%; max-width: 620px; margin: 8px 0; padding: 7px 10px; font-family: Consolas, Monaco, monospace; background: #f6f7f7; color: #1d2327; border: 1px solid #c3c4c7; border-radius: 3px; }
+.mm-admin-help { color: #50575e; font-size: 14px; max-width: 760px; }
+.mm-admin-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.mm-admin-pill { display: inline-block; margin: 0 0 8px; padding: 3px 8px; border-radius: 999px; background: #f0f6fc; color: #135e96; font-size: 12px; font-weight: 600; }
+.mm-bottle-size-settings label { display: inline-block; min-width: 240px; margin-bottom: 8px; }
+.mm-bottle-size-settings input { width: 95px; }
+@media (max-width: 960px) { .mm-admin-grid { grid-template-columns: 1fr; } }

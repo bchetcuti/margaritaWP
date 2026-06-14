@@ -2,7 +2,7 @@
 
 Margarita Measurements is a WordPress plugin for publishing an interactive margarita recipe calculator. Version 3.0.0 focuses on recipe ratios, batch scaling, flavour variations, ABV estimates, standard-drink estimates, and embeddable calculator views for WordPress content.
 
-For the WordPress.org directory-format listing, see [`readme.txt`](readme.txt). That file is the canonical plugin-directory readme for submission metadata, screenshots, FAQ, changelog, and upgrade notices.
+For practical shortcode and admin setup notes, see [`docs/USAGE.md`](docs/USAGE.md). For the WordPress.org directory-format listing, see [`readme.txt`](readme.txt). That file is the canonical plugin-directory readme for submission metadata, screenshots, FAQ, changelog, and upgrade notices.
 
 ## Features
 
@@ -18,6 +18,7 @@ For the WordPress.org directory-format listing, see [`readme.txt`](readme.txt). 
 - Nutrition and standard-drink estimates for AU, UK, and US standard-drink definitions.
 - Salt-rim estimate, print-friendly recipe card output, responsive styles, and dark-mode-aware CSS variables.
 - Local AJAX calculations and REST endpoints for calculation and preset data.
+- Visitor selections are not stored. The calculator does not use localStorage, cookies or user accounts to remember recipe choices.
 
 ## Requirements
 
@@ -72,6 +73,8 @@ The plugin registers a dynamic **Margarita Measurements** block. The block edito
 
 ## Settings summary
 
+The WordPress settings screen supports site-wide defaults. Site defaults apply when no shortcode or block override is provided, and shortcode or block settings override these defaults for that specific calculator instance.
+
 The WordPress settings screen supports:
 
 - Default unit.
@@ -84,7 +87,7 @@ The WordPress settings screen supports:
 
 ## Privacy and external services
 
-Margarita Measurements does not add analytics, tracking, visitor accounts, saved visitor recipes, URL sharing, remote API calls, or third-party calculation services. Recipe calculations run in the browser and through the plugin's local WordPress AJAX/REST handlers.
+Margarita Measurements does not add analytics, tracking, visitor accounts, saved visitor recipes, URL sharing, remote API calls, or third-party calculation services. Recipe calculations run in the browser and through the plugin's local WordPress AJAX/REST handlers. Visitor selections are not stored. The calculator does not use localStorage, cookies or user accounts to remember recipe choices.
 
 ## Architecture notes
 
