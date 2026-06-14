@@ -13,7 +13,7 @@ A margarita calculator for WordPress with recipe ratios, batch scaling, flavour 
 == Description ==
 Whether you're squeezing limes for two or mixing a larger batch for guests, Margarita Measurements does the maths so you don't have to.
 
-Margarita Measurements helps WordPress sites publish a practical cocktail calculator with preset recipes, unit conversion, flavour variations, pitcher/batch output, print-friendly results, and responsible recipe-planning estimates.
+Margarita Measurements helps WordPress sites publish a practical cocktail calculator with preset recipes, unit conversion, flavour variations, pitcher/batch output, print-friendly results, and practical recipe-planning estimates.
 
 = Who it is for =
 * Home users: scale a classic, Tommy's, frozen or skinny margarita without mental arithmetic.
@@ -37,6 +37,7 @@ Margarita Measurements helps WordPress sites publish a practical cocktail calcul
 * Themeable CSS variables with dark mode support.
 * AJAX form with no page reload.
 * REST endpoint for calculations and preset listings.
+* Visitor selections are not stored; the calculator does not use localStorage, cookies or user accounts to remember recipe choices.
 
 = Shortcodes =
 `[margarita_measurements]`
@@ -50,7 +51,7 @@ Margarita Measurements helps WordPress sites publish a practical cocktail calcul
 `[margarita_widget preset="classic" drinks="2" align="right"]`
 
 = Privacy =
-Recipe calculations run in WordPress and the browser through the plugin's local AJAX/REST handlers. The plugin does not send recipe calculations to third-party services, does not add analytics, and does not track visitors.
+Recipe calculations run in WordPress and the browser through the plugin's local AJAX/REST handlers. The plugin does not send recipe calculations to third-party services, does not add analytics, and does not track visitors. Visitor selections are not stored. The calculator does not use localStorage, cookies or user accounts to remember recipe choices.
 
 == Installation ==
 1. Upload the ZIP via Plugins > Add New > Upload Plugin.
@@ -80,13 +81,17 @@ Yes. The Advanced panel includes tequila and triple sec ABV fields, and the shor
 Yes. The nutrition panel estimates alcohol grams and standard drinks using AU (10g), UK (8g) or US (14g) definitions. These are approximate recipe-planning values only.
 
 = Does it store visitor data? =
-No. The plugin does not store visitor recipe calculations or visitor account data.
+No. Visitor selections are not stored. The calculator does not use localStorage, cookies or user accounts to remember recipe choices.
 
 = Does it call third-party services? =
 No. It does not call third-party APIs or load remote tracking services for calculations.
 
 == Changelog ==
 = 3.0.0 =
+* Improved the WordPress admin settings screen with clearer setup guidance.
+* Added shortcode and widget examples to the admin page.
+* Added GitHub documentation and support links.
+* Clarified that visitor calculator selections are not stored.
 * Added nutrition and standard drinks estimator.
 * Added AU, UK and US standard-drink region support.
 * Added tequila and triple sec ABV customisation.
@@ -112,7 +117,7 @@ No. It does not call third-party APIs or load remote tracking services for calcu
 
 == Upgrade Notice ==
 = 3.0.0 =
-Adds responsible recipe-planning estimates, ABV customisation and a compact widget shortcode for recipe posts.
+Adds practical recipe-planning estimates, ABV customisation and a compact widget shortcode for recipe posts.
 
 == License ==
 GPLv2 or later.

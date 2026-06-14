@@ -5,6 +5,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class MM_Settings {
     private static $instance = null;
+    private $settings_page_hook = '';
+
     public static function instance() {
         if ( null === self::$instance ) { self::$instance = new self(); }
         return self::$instance;
@@ -12,15 +14,22 @@ class MM_Settings {
     private function __construct() {
         add_action( 'admin_init', array( $this, 'register_settings' ) );
         add_action( 'admin_menu', array( $this, 'add_menu' ) );
+        add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_assets' ) );
     }
     public function add_menu() {
-        add_options_page(
+        $this->settings_page_hook = add_options_page(
             __( 'Margarita Measurements', 'margarita-measurements' ),
             __( 'Margarita Measurements', 'margarita-measurements' ),
             'manage_options',
             'margarita-measurements',
             array( $this, 'render_page' )
         );
+    }
+    public function enqueue_admin_assets( $hook_suffix ) {
+        if ( $hook_suffix !== $this->settings_page_hook ) {
+            return;
+        }
+        wp_enqueue_style( 'mm-admin', MM_PLUGIN_URL . 'assets/css/admin.css', array(), MM_VERSION );
     }
     public function register_settings() {
         register_setting( 'mm_settings', 'mm_unit', array( 'type' => 'string', 'sanitize_callback' => array( $this, 'sanitize_unit' ), 'default' => 'ml' ) );
@@ -82,96 +91,98 @@ class MM_Settings {
 
         return array_slice( $presets, 0, 20, true );
     }
-    public function render_page() {
+
+    private function shortcode_example( $shortcode ) {
         ?>
-        <div class="wrap">
+        <input class="mm-admin-code" type="text" readonly value="<?php echo esc_attr( $shortcode ); ?>" />
+        <?php
+    }
+
+    public function render_page() {
+        $repository_url = 'https://github.com/bchetcuti/margaritaWP';
+        $readme_url     = 'https://github.com/bchetcuti/margaritaWP#readme';
+        $issues_url     = 'https://github.com/bchetcuti/margaritaWP/issues';
+        ?>
+        <div class="wrap mm-admin-wrap">
             <h1><?php echo esc_html__( 'Margarita Measurements Settings', 'margarita-measurements' ); ?></h1>
-            <form method="post" action="options.php">
+            <div class="mm-admin-grid">
+                <section class="mm-admin-card mm-admin-card--primary">
+                    <p class="mm-admin-pill"><?php echo esc_html( sprintf( __( 'Version %s', 'margarita-measurements' ), MM_VERSION ) ); ?></p>
+                    <h2><?php esc_html_e( 'Overview', 'margarita-measurements' ); ?></h2>
+                    <p><?php esc_html_e( 'Margarita Measurements adds an interactive margarita calculator to WordPress with recipe presets, batch scaling, flavour variations, party-planning estimates, ABV estimates and compact recipe widgets.', 'margarita-measurements' ); ?></p>
+                    <p><?php esc_html_e( 'Embed it with the full calculator shortcode, the compact widget shortcode, or the Gutenberg block.', 'margarita-measurements' ); ?></p>
+                    <p class="mm-admin-help"><strong><?php esc_html_e( 'Visitor choices are not saved. Calculator selections are used only for the current calculation. Use site defaults, shortcode attributes or block settings when you want a calculator to open with specific values.', 'margarita-measurements' ); ?></strong></p>
+                </section>
+
+                <section class="mm-admin-card">
+                    <h2><?php esc_html_e( 'Quick start', 'margarita-measurements' ); ?></h2>
+                    <p><?php esc_html_e( 'Copy a shortcode into a post, page, widget area, or shortcode-capable template.', 'margarita-measurements' ); ?></p>
+                    <?php
+                    $this->shortcode_example( '[margarita_measurements]' );
+                    $this->shortcode_example( '[margarita_measurements preset="tommys" drinks="4" unit="ml"]' );
+                    $this->shortcode_example( '[margarita_measurements preset="classic" flavour="mango" drinks="6" show_abv="true"]' );
+                    $this->shortcode_example( '[margarita_widget]' );
+                    $this->shortcode_example( '[margarita_widget preset="classic" drinks="2" align="right"]' );
+                    ?>
+                </section>
+
+                <section class="mm-admin-card">
+                    <h2><?php esc_html_e( 'Documentation and support', 'margarita-measurements' ); ?></h2>
+                    <p><?php esc_html_e( 'Use the GitHub documentation for shortcode attributes, setup notes and issue reporting.', 'margarita-measurements' ); ?></p>
+                    <p class="mm-admin-actions">
+                        <a class="button button-secondary" href="<?php echo esc_url( $repository_url ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Repository', 'margarita-measurements' ); ?></a>
+                        <a class="button button-secondary" href="<?php echo esc_url( $readme_url ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'README', 'margarita-measurements' ); ?></a>
+                        <a class="button button-secondary" href="<?php echo esc_url( $issues_url ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Issues', 'margarita-measurements' ); ?></a>
+                    </p>
+                    <p class="mm-admin-help"><?php esc_html_e( 'WordPress.org submission is coming soon; use GitHub for current documentation and support.', 'margarita-measurements' ); ?></p>
+                </section>
+            </div>
+
+            <form method="post" action="options.php" class="mm-admin-card">
                 <?php settings_fields( 'mm_settings' ); ?>
+                <h2><?php esc_html_e( 'Site defaults', 'margarita-measurements' ); ?></h2>
+                <p class="mm-admin-help"><?php esc_html_e( 'Site defaults apply when no shortcode or block override is provided.', 'margarita-measurements' ); ?></p>
+                <p class="mm-admin-help"><?php esc_html_e( 'Shortcode and block settings override these defaults for that specific calculator instance.', 'margarita-measurements' ); ?></p>
+                <p class="mm-admin-help"><?php esc_html_e( 'Nutrition, ABV and standard-drink values are estimates for recipe planning only.', 'margarita-measurements' ); ?></p>
                 <table class="form-table" role="presentation">
-                    <tr>
-                        <th scope="row"><label for="mm_unit"><?php esc_html_e( 'Default Unit', 'margarita-measurements' ); ?></label></th>
-                        <td>
-                            <select id="mm_unit" name="mm_unit">
-                                <?php foreach ( array( 'ml','oz','shot','nip' ) as $u ): ?>
-                                    <option value="<?php echo esc_attr( $u ); ?>" <?php selected( get_option('mm_unit', 'ml'), $u ); ?>>
-                                        <?php echo esc_html( strtoupper( $u ) ); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><label for="mm_default_preset"><?php esc_html_e( 'Default Preset', 'margarita-measurements' ); ?></label></th>
-                        <td>
-                            <select id="mm_default_preset" name="mm_default_preset">
-                                <?php foreach ( MM_Plugin::instance()->calc->list_presets() as $p => $preset ): ?>
-                                    <option value="<?php echo esc_attr( $p ); ?>" <?php selected( get_option('mm_default_preset', 'classic'), $p ); ?>>
-                                        <?php echo esc_html( $preset['label'] ?? ucfirst( $p ) ); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><label for="mm_max_drinks"><?php esc_html_e( 'Max Drinks (per calc)', 'margarita-measurements' ); ?></label></th>
-                        <td><input type="number" id="mm_max_drinks" name="mm_max_drinks" min="1" max="200" value="<?php echo esc_attr( get_option('mm_max_drinks', 25) ); ?>" /></td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><?php esc_html_e( 'Show ABV', 'margarita-measurements' ); ?></th>
-                        <td><input type="checkbox" name="mm_show_abv" value="1" <?php checked( get_option('mm_show_abv', 1 ), 1 ); ?> /></td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><label for="mm_standard_drink_region"><?php esc_html_e( 'Standard drink default', 'margarita-measurements' ); ?></label></th>
-                        <td><select id="mm_standard_drink_region" name="mm_standard_drink_region"><?php foreach ( array( 'AU' => 'Australia (10g)', 'US' => 'United States (14g)', 'UK' => 'United Kingdom (8g)' ) as $region => $label ) : ?><option value="<?php echo esc_attr( $region ); ?>" <?php selected( get_option( 'mm_standard_drink_region', 'AU' ), $region ); ?>><?php echo esc_html( $label ); ?></option><?php endforeach; ?></select></td>
-                    </tr>
-                    <?php $mm_bottle_sizes = MM_Plugin::instance()->calc->bottle_sizes(); ?>
-                    <tr>
-                        <th scope="row"><?php esc_html_e( 'Party bottle sizes (ml)', 'margarita-measurements' ); ?></th>
-                        <td class="mm-bottle-size-settings">
-                            <?php foreach ( array( 'tequila' => 'Tequila', 'triple' => 'Triple sec', 'citrus' => 'Citrus juice', 'agave' => 'Agave syrup', 'mixer' => 'Flavour mixers' ) as $key => $label ) : ?>
-                                <label><?php echo esc_html( $label ); ?> <input type="number" name="mm_bottle_sizes[<?php echo esc_attr( $key ); ?>]" min="50" max="5000" step="50" value="<?php echo esc_attr( $mm_bottle_sizes[ $key ] ); ?>" /></label><br />
-                            <?php endforeach; ?>
-                        </td>
-                    </tr>
+                    <tr><th scope="row"><label for="mm_unit"><?php esc_html_e( 'Default Unit', 'margarita-measurements' ); ?></label></th><td><select id="mm_unit" name="mm_unit"><?php foreach ( array( 'ml','oz','shot','nip' ) as $u ): ?><option value="<?php echo esc_attr( $u ); ?>" <?php selected( get_option('mm_unit', 'ml'), $u ); ?>><?php echo esc_html( strtoupper( $u ) ); ?></option><?php endforeach; ?></select><p class="description"><?php esc_html_e( 'The unit shown when no shortcode or block unit is provided.', 'margarita-measurements' ); ?></p></td></tr>
+                    <tr><th scope="row"><label for="mm_default_preset"><?php esc_html_e( 'Default Preset', 'margarita-measurements' ); ?></label></th><td><select id="mm_default_preset" name="mm_default_preset"><?php foreach ( MM_Plugin::instance()->calc->list_presets() as $p => $preset ): ?><option value="<?php echo esc_attr( $p ); ?>" <?php selected( get_option('mm_default_preset', 'classic'), $p ); ?>><?php echo esc_html( $preset['label'] ?? ucfirst( $p ) ); ?></option><?php endforeach; ?></select><p class="description"><?php esc_html_e( 'The recipe preset used by default.', 'margarita-measurements' ); ?></p></td></tr>
+                    <tr><th scope="row"><label for="mm_max_drinks"><?php esc_html_e( 'Max Drinks', 'margarita-measurements' ); ?></label></th><td><input type="number" id="mm_max_drinks" name="mm_max_drinks" min="1" max="200" value="<?php echo esc_attr( get_option('mm_max_drinks', 25) ); ?>" /><p class="description"><?php esc_html_e( 'Upper limit for drink-count calculations.', 'margarita-measurements' ); ?></p></td></tr>
+                    <tr><th scope="row"><?php esc_html_e( 'Show ABV', 'margarita-measurements' ); ?></th><td><label><input type="checkbox" name="mm_show_abv" value="1" <?php checked( get_option('mm_show_abv', 1 ), 1 ); ?> /> <?php esc_html_e( 'Show estimated ABV by default.', 'margarita-measurements' ); ?></label><p class="description"><?php esc_html_e( 'Show estimated ABV by default. Individual shortcode or block instances can override this.', 'margarita-measurements' ); ?></p></td></tr>
+                    <tr><th scope="row"><label for="mm_standard_drink_region"><?php esc_html_e( 'Standard drink default', 'margarita-measurements' ); ?></label></th><td><select id="mm_standard_drink_region" name="mm_standard_drink_region"><?php foreach ( array( 'AU' => 'Australia (10g)', 'US' => 'United States (14g)', 'UK' => 'United Kingdom (8g)' ) as $region => $label ) : ?><option value="<?php echo esc_attr( $region ); ?>" <?php selected( get_option( 'mm_standard_drink_region', 'AU' ), $region ); ?>><?php echo esc_html( $label ); ?></option><?php endforeach; ?></select><p class="description"><?php esc_html_e( 'Default standard-drink region for estimates.', 'margarita-measurements' ); ?></p></td></tr>
                 </table>
+
+                <h2><?php esc_html_e( 'Party planning defaults', 'margarita-measurements' ); ?></h2>
+                <p class="mm-admin-help"><?php esc_html_e( 'Used by Party Planning mode to estimate bottle counts.', 'margarita-measurements' ); ?></p>
+                <?php $mm_bottle_sizes = MM_Plugin::instance()->calc->bottle_sizes(); ?>
+                <table class="form-table" role="presentation"><tr><th scope="row"><?php esc_html_e( 'Party bottle sizes (ml)', 'margarita-measurements' ); ?></th><td class="mm-bottle-size-settings"><?php foreach ( array( 'tequila' => 'Tequila', 'triple' => 'Triple sec', 'citrus' => 'Citrus juice', 'agave' => 'Agave syrup', 'mixer' => 'Flavour mixers' ) as $key => $label ) : ?><label><?php echo esc_html( $label ); ?> <input type="number" name="mm_bottle_sizes[<?php echo esc_attr( $key ); ?>]" min="50" max="5000" step="50" value="<?php echo esc_attr( $mm_bottle_sizes[ $key ] ); ?>" /></label><br /><?php endforeach; ?><p class="description"><?php esc_html_e( 'Used by Party Planning mode to estimate bottle counts.', 'margarita-measurements' ); ?></p></td></tr></table>
                 <?php submit_button(); ?>
             </form>
 
-            <hr />
-            <h2><?php esc_html_e( 'Custom Presets', 'margarita-measurements' ); ?></h2>
-            <?php $custom_presets = get_option( 'mm_custom_presets', array() ); $custom_presets = is_array( $custom_presets ) ? $custom_presets : array(); ?>
-            <table class="widefat striped" style="max-width: 900px;">
-                <thead><tr><th><?php esc_html_e( 'Name', 'margarita-measurements' ); ?></th><th><?php esc_html_e( 'Ratios', 'margarita-measurements' ); ?></th><th><?php esc_html_e( 'Action', 'margarita-measurements' ); ?></th></tr></thead>
-                <tbody>
-                    <?php if ( empty( $custom_presets ) ) : ?>
-                        <tr><td colspan="3"><?php esc_html_e( 'No custom presets yet.', 'margarita-measurements' ); ?></td></tr>
-                    <?php else : ?>
-                        <?php foreach ( $custom_presets as $key => $preset ) : ?>
-                            <tr>
-                                <td><?php echo esc_html( $preset['label'] ?? ucfirst( $key ) ); ?></td>
-                                <td><?php echo esc_html( sprintf( 'Tequila %s ml, Citrus %s ml, Triple %s ml, Agave %s ml, Triple ABV %s%%, Ice x%s', $preset['tequila_ml'] ?? 0, $preset['citrus_ml'] ?? 0, $preset['triple_ml'] ?? 0, $preset['agave_ml'] ?? 0, round( ( $preset['triple_abv'] ?? 0.4 ) * 100, 1 ), $preset['ice_factor'] ?? 1 ) ); ?></td>
-                                <td><button type="button" class="button mm-delete-preset" data-key="<?php echo esc_attr( $key ); ?>"><?php esc_html_e( 'Delete', 'margarita-measurements' ); ?></button></td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-            <h3><?php esc_html_e( 'Add preset', 'margarita-measurements' ); ?></h3>
-            <form method="post" action="options.php">
-                <?php settings_fields( 'mm_custom_presets_settings' ); wp_nonce_field( 'mm_custom_preset_nonce', 'mm_custom_preset_nonce' ); ?>
-                <table class="form-table" role="presentation">
-                    <tr><th><label for="mm_custom_label"><?php esc_html_e( 'Label', 'margarita-measurements' ); ?></label></th><td><input id="mm_custom_label" name="mm_custom_presets[new][label]" type="text" required /></td></tr>
-                    <tr><th><label for="mm_custom_tequila"><?php esc_html_e( 'Tequila ml', 'margarita-measurements' ); ?></label></th><td><input id="mm_custom_tequila" name="mm_custom_presets[new][tequila_ml]" type="number" min="0" step="0.1" value="60" /></td></tr>
-                    <tr><th><label for="mm_custom_citrus"><?php esc_html_e( 'Citrus ml', 'margarita-measurements' ); ?></label></th><td><input id="mm_custom_citrus" name="mm_custom_presets[new][citrus_ml]" type="number" min="0" step="0.1" value="25" /></td></tr>
-                    <tr><th><label for="mm_custom_triple"><?php esc_html_e( 'Triple sec ml', 'margarita-measurements' ); ?></label></th><td><input id="mm_custom_triple" name="mm_custom_presets[new][triple_ml]" type="number" min="0" step="0.1" value="15" /></td></tr>
-                    <tr><th><label for="mm_custom_agave"><?php esc_html_e( 'Agave ml', 'margarita-measurements' ); ?></label></th><td><input id="mm_custom_agave" name="mm_custom_presets[new][agave_ml]" type="number" min="0" step="0.1" value="5" /></td></tr>
-                    <tr><th><label for="mm_custom_abv"><?php esc_html_e( 'Triple sec ABV %', 'margarita-measurements' ); ?></label></th><td><input id="mm_custom_abv" name="mm_custom_presets[new][triple_abv]" type="number" min="0" max="100" step="0.1" value="40" /></td></tr>
-                    <tr><th><label for="mm_custom_ice"><?php esc_html_e( 'Ice factor', 'margarita-measurements' ); ?></label></th><td><input id="mm_custom_ice" name="mm_custom_presets[new][ice_factor]" type="number" min="0" step="0.1" value="1.0" /></td></tr>
-                    <tr><th><label for="mm_custom_note"><?php esc_html_e( 'Note', 'margarita-measurements' ); ?></label></th><td><input id="mm_custom_note" name="mm_custom_presets[new][note]" type="text" /></td></tr>
+            <section class="mm-admin-card">
+                <h2><?php esc_html_e( 'Custom Presets', 'margarita-measurements' ); ?></h2>
+                <p class="mm-admin-help"><?php esc_html_e( 'Create site-specific margarita ratios. These are stored as WordPress options and are available in shortcodes, blocks and the calculator UI.', 'margarita-measurements' ); ?></p>
+                <?php $custom_presets = get_option( 'mm_custom_presets', array() ); $custom_presets = is_array( $custom_presets ) ? $custom_presets : array(); ?>
+                <table class="widefat striped">
+                    <thead><tr><th><?php esc_html_e( 'Name', 'margarita-measurements' ); ?></th><th><?php esc_html_e( 'Ratios', 'margarita-measurements' ); ?></th><th><?php esc_html_e( 'Action', 'margarita-measurements' ); ?></th></tr></thead>
+                    <tbody><?php if ( empty( $custom_presets ) ) : ?><tr><td colspan="3"><?php esc_html_e( 'No custom presets yet.', 'margarita-measurements' ); ?></td></tr><?php else : foreach ( $custom_presets as $key => $preset ) : ?><tr><td><?php echo esc_html( $preset['label'] ?? ucfirst( $key ) ); ?></td><td><?php echo esc_html( sprintf( 'Tequila %s ml, Citrus %s ml, Triple %s ml, Agave %s ml, Triple ABV %s%%, Ice x%s', $preset['tequila_ml'] ?? 0, $preset['citrus_ml'] ?? 0, $preset['triple_ml'] ?? 0, $preset['agave_ml'] ?? 0, round( ( $preset['triple_abv'] ?? 0.4 ) * 100, 1 ), $preset['ice_factor'] ?? 1 ) ); ?></td><td><button type="button" class="button mm-delete-preset" data-key="<?php echo esc_attr( $key ); ?>"><?php esc_html_e( 'Delete', 'margarita-measurements' ); ?></button></td></tr><?php endforeach; endif; ?></tbody>
                 </table>
-                <?php submit_button( __( 'Save Custom Preset', 'margarita-measurements' ) ); ?>
-            </form>
+                <h3><?php esc_html_e( 'Add custom preset', 'margarita-measurements' ); ?></h3>
+                <form method="post" action="options.php">
+                    <?php settings_fields( 'mm_custom_presets_settings' ); wp_nonce_field( 'mm_custom_preset_nonce', 'mm_custom_preset_nonce' ); ?>
+                    <table class="form-table" role="presentation">
+                        <tr><th><label for="mm_custom_label"><?php esc_html_e( 'Label', 'margarita-measurements' ); ?></label></th><td><input id="mm_custom_label" name="mm_custom_presets[new][label]" type="text" required /><p class="description"><?php esc_html_e( 'Shown in preset dropdowns.', 'margarita-measurements' ); ?></p></td></tr>
+                        <tr><th><label for="mm_custom_tequila"><?php esc_html_e( 'Tequila ml', 'margarita-measurements' ); ?></label></th><td><input id="mm_custom_tequila" name="mm_custom_presets[new][tequila_ml]" type="number" min="0" step="0.1" value="60" /></td></tr>
+                        <tr><th><label for="mm_custom_citrus"><?php esc_html_e( 'Citrus ml', 'margarita-measurements' ); ?></label></th><td><input id="mm_custom_citrus" name="mm_custom_presets[new][citrus_ml]" type="number" min="0" step="0.1" value="25" /></td></tr>
+                        <tr><th><label for="mm_custom_triple"><?php esc_html_e( 'Triple sec ml', 'margarita-measurements' ); ?></label></th><td><input id="mm_custom_triple" name="mm_custom_presets[new][triple_ml]" type="number" min="0" step="0.1" value="15" /></td></tr>
+                        <tr><th><label for="mm_custom_agave"><?php esc_html_e( 'Agave ml', 'margarita-measurements' ); ?></label></th><td><input id="mm_custom_agave" name="mm_custom_presets[new][agave_ml]" type="number" min="0" step="0.1" value="5" /></td></tr>
+                        <tr><th><label for="mm_custom_abv"><?php esc_html_e( 'Triple sec ABV %', 'margarita-measurements' ); ?></label></th><td><input id="mm_custom_abv" name="mm_custom_presets[new][triple_abv]" type="number" min="0" max="100" step="0.1" value="40" /></td></tr>
+                        <tr><th><label for="mm_custom_ice"><?php esc_html_e( 'Ice factor', 'margarita-measurements' ); ?></label></th><td><input id="mm_custom_ice" name="mm_custom_presets[new][ice_factor]" type="number" min="0" step="0.1" value="1.0" /></td></tr>
+                        <tr><th><label for="mm_custom_note"><?php esc_html_e( 'Note', 'margarita-measurements' ); ?></label></th><td><input id="mm_custom_note" name="mm_custom_presets[new][note]" type="text" /></td></tr>
+                    </table>
+                    <?php submit_button( __( 'Save Custom Preset', 'margarita-measurements' ) ); ?>
+                </form>
+            </section>
             <script>
             jQuery(function($){
                 $('.mm-delete-preset').on('click', function(){
